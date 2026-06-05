@@ -107,6 +107,8 @@
   .lead-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(31, 78, 121, 0.08); }
   .lead-card.unlocked { border-color: var(--success); background: linear-gradient(180deg, #F0FDF4 0%, white 30%); }
   .lead-card.unlocked::before { content: "✓ Unlocked"; position: absolute; top: 12px; right: 12px; background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .lead-card.pending { border-color: var(--warning); background: linear-gradient(180deg, #FFFBEB 0%, white 30%); }
+  .lead-card.pending::before { content: "⏳ Under review"; position: absolute; top: 12px; right: 12px; background: var(--warning); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
 
   .lead-name { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; padding-right: 60px; }
   .lead-niche { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 10px; }
@@ -368,7 +370,7 @@
   <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeModal('report')">×</button>
     <h2>⚠ Report bad lead</h2>
-    <p class="sub">Help us improve quality. Your credit will be refunded.</p>
+    <p class="sub">Help us improve quality. Credit will be refunded if admin approves your report (usually within 24 hours).</p>
 
     <div style="margin:18px 0;">
       <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;display:block;margin-bottom:10px;">Why is this lead bad? (select all that apply)</label>
@@ -401,7 +403,7 @@
 
     <div style="display:flex;gap:10px;margin-top:22px;border-top:1px solid var(--border);padding-top:18px;">
       <button class="btn btn-secondary" onclick="closeModal('report')" style="flex:1;">Cancel</button>
-      <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()" style="flex:2;background:var(--danger);">Submit & Refund Credit</button>
+      <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()" style="flex:2;background:var(--danger);">Submit for Review</button>
     </div>
   </div>
 </div>
@@ -876,9 +878,12 @@ function renderLeads() {
   }
 
   list.forEach(L => {
-    const isUnlocked = !!STATE.unlocked[L.id];
+    const U = STATE.unlocked[L.id];
+    const isUnlocked = !!U;
+    const isPending = isUnlocked && U.reportStatus === "pending";
+    const cardClass = isPending ? "pending" : (isUnlocked ? "unlocked" : "");
     const card = document.createElement("div");
-    card.className = "lead-card" + (isUnlocked ? " unlocked" : "");
+    card.className = "lead-card" + (cardClass ? " " + cardClass : "");
     card.innerHTML = `
       <div class="lead-name">${escapeHtml(L.name)}</div>
       <div class="lead-niche">${escapeHtml(L.niche)} • ${escapeHtml(L.city || "—")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</div>
@@ -894,6 +899,7 @@ function renderLeads() {
         <div class="contact-line"><strong>✉️</strong> <span>${escapeHtml(L.email || "—")}</span></div>
       </div>
       ${!isUnlocked ? '<div class="lock-overlay">🔒 Unlock to reveal</div>' : ""}
+      ${isPending ? '<div style="margin:8px 0;padding:8px 10px;background:#FEF3C7;border-radius:6px;font-size:12px;color:#92400E;text-align:center;">⏳ Awaiting admin review for refund</div>' : ""}
       <div class="lead-actions">
         ${isUnlocked
           ? `<button class="btn btn-secondary" onclick="openDetail('${L.id}')">View details</button>`
@@ -1017,7 +1023,10 @@ function openDetail(leadId) {
     </div>
     <div style="display:flex;gap:8px;margin-top:18px;border-top:1px solid var(--border);padding-top:16px;">
       <button class="btn btn-primary" onclick="copyContact('${L.id}')">📋 Copy contact</button>
-      <button class="btn btn-ghost" onclick="reportBad('${L.id}')">⚠ Report bad lead</button>
+      ${U.reportStatus === "pending"
+        ? `<button class="btn btn-ghost" disabled style="background:#FEF3C7;color:#92400E;border-color:#FCD34D;cursor:not-allowed;">⏳ Under review — refund pending</button>`
+        : `<button class="btn btn-ghost" onclick="reportBad('${L.id}')">⚠ Report bad lead</button>`
+      }
     </div>
   `;
   openModal("detail");
@@ -1049,6 +1058,12 @@ async function submitReport() {
   if (!U) return;
   const L = U.leadSnapshot;
 
+  // Already pending? Don't allow double-report
+  if (U.reportStatus === "pending") {
+    toast("Already reported. Wait for admin review.", "danger");
+    return;
+  }
+
   // Collect selected reasons
   const reasons = [];
   document.querySelectorAll('#modal-report input[type="checkbox"]:checked').forEach(cb => {
@@ -1068,7 +1083,8 @@ async function submitReport() {
   try {
     if (!window.LF_USER) throw new Error("Not signed in");
 
-    const { error } = await supabaseClient
+    // Insert into Supabase, get the report ID back so we can track it
+    const { data, error } = await supabaseClient
       .from("bad_lead_reports")
       .insert({
         user_id: window.LF_USER.id,
@@ -1087,14 +1103,18 @@ async function submitReport() {
         reasons: reasons,
         notes: notes,
         status: "open",
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
 
-    // Refund credit + remove from unlocked
-    STATE.credits += U.cost || 1;
-    logHistory(`Refunded: bad lead reported (${reasons.join(", ")})`, U.cost || 1);
-    delete STATE.unlocked[id];
+    // Mark lead as "pending review" — NO credit refund yet
+    // Refund happens only when admin approves (verified status)
+    STATE.unlocked[id].reportStatus = "pending";
+    STATE.unlocked[id].reportId = data.id;
+    STATE.unlocked[id].reportedAt = new Date().toISOString();
+    logHistory(`Reported (pending review): ${L.name}`, 0);
     save();
 
     closeModal("report");
@@ -1102,12 +1122,78 @@ async function submitReport() {
     renderLeads();
     renderMyLeads();
     renderHistory();
-    toast("✓ Report submitted. Credit refunded.");
+    toast("✓ Report submitted. Credit will refund if admin approves (usually within 24h).");
   } catch (err) {
     toast("Could not submit: " + err.message, "danger");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Submit & Refund Credit";
+    btn.textContent = "Submit for Review";
+  }
+}
+
+// ===== Check pending reports on dashboard load =====
+// Syncs Supabase report statuses → refunds approved, restores rejected
+async function checkPendingReports() {
+  if (!window.LF_USER) return;
+
+  // Find all leads with pending reports
+  const pendingEntries = Object.entries(STATE.unlocked)
+    .filter(([id, u]) => u.reportStatus === "pending" && u.reportId);
+
+  if (pendingEntries.length === 0) return;
+
+  const reportIds = pendingEntries.map(([id, u]) => u.reportId);
+
+  try {
+    const { data: reports, error } = await supabaseClient
+      .from("bad_lead_reports")
+      .select("id, status, reviewed_at, reviewer_notes")
+      .in("id", reportIds);
+
+    if (error) throw error;
+
+    let refundedCount = 0;
+    let rejectedCount = 0;
+    let totalRefund = 0;
+
+    for (const report of reports) {
+      const entry = pendingEntries.find(([id, u]) => u.reportId === report.id);
+      if (!entry) continue;
+      const [leadId, U] = entry;
+
+      if (report.status === "verified") {
+        // ✓ Admin approved — refund credit + remove lead
+        const refund = U.cost || 1;
+        STATE.credits += refund;
+        totalRefund += refund;
+        logHistory(`✓ Refund approved by admin: ${U.leadSnapshot.name}`, refund);
+        delete STATE.unlocked[leadId];
+        refundedCount++;
+      } else if (report.status === "rejected") {
+        // ✕ Admin rejected — clear pending state, lead returns to normal
+        delete STATE.unlocked[leadId].reportStatus;
+        delete STATE.unlocked[leadId].reportId;
+        delete STATE.unlocked[leadId].reportedAt;
+        logHistory(`✕ Report rejected: ${U.leadSnapshot.name}`, 0);
+        rejectedCount++;
+      }
+      // status === "open" → still pending, no action
+    }
+
+    if (refundedCount > 0 || rejectedCount > 0) {
+      save();
+      renderLeads();
+      renderMyLeads();
+      renderHistory();
+      if (refundedCount > 0) {
+        toast(`✓ ${refundedCount} refund(s) approved! +${totalRefund} credits`);
+      }
+      if (rejectedCount > 0) {
+        setTimeout(() => toast(`${rejectedCount} report(s) rejected — leads returned`, "danger"), refundedCount > 0 ? 3000 : 0);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to check pending reports:", err);
   }
 }
 
@@ -1121,12 +1207,16 @@ function renderMyLeads() {
   const rows = ids.map(id => {
     const U = STATE.unlocked[id];
     const L = U.leadSnapshot;
-    return `<tr>
+    const isPending = U.reportStatus === "pending";
+    const statusPill = isPending
+      ? `<span class="status-pill" style="background:#FEF3C7;color:#92400E;">⏳ Under review</span>`
+      : `<span class="status-pill status-${U.status}">${U.status}</span>`;
+    return `<tr${isPending ? ' style="background:#FFFBEB;"' : ''}>
       <td><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:12px;color:var(--muted);">${escapeHtml(L.niche)}</span></td>
       <td>${escapeHtml(L.city || "")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</td>
       <td>${escapeHtml(L.phone || "—")}</td>
       <td>${escapeHtml(L.email || "—")}</td>
-      <td><span class="status-pill status-${U.status}">${U.status}</span></td>
+      <td>${statusPill}</td>
       <td><button class="btn btn-secondary" style="max-width:90px;" onclick="openDetail('${L.id}')">Open</button></td>
     </tr>`;
   }).join("");
@@ -1244,6 +1334,11 @@ function resetFilters() {
   STATE.activeDatasets = [];
   STATE.activeQueryLabel = "";
   await loadLeads();  // will render empty state
+
+  // Check Supabase for admin review decisions on user's pending reports.
+  // Refunds approved reports, restores rejected ones.
+  // Wait 1 sec for LF_USER to be ready, then run in background.
+  setTimeout(() => checkPendingReports(), 1500);
 })();
 </script>
 </body>
