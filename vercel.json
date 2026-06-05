@@ -5,7 +5,9 @@
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
     { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" }
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/reports", "destination": "/admin.html" }
   ],
   "headers": [
     {

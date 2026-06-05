@@ -6,9 +6,9 @@
 <title>LeadForge Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ===== SUPABASE CONFIG — REPLACE THESE WITH YOUR PROJECT'S VALUES =====
-  const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
-  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = "https://wqzqzwswmflyuogdiprq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // ===== AUTH GUARD — redirects to /login if not signed in =====
@@ -362,6 +362,50 @@
 </div>
 
 <div class="modal-bg" id="modal-detail"><div class="modal" id="detailContent"></div></div>
+
+<!-- ===== REPORT BAD LEAD MODAL ===== -->
+<div class="modal-bg" id="modal-report">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('report')">×</button>
+    <h2>⚠ Report bad lead</h2>
+    <p class="sub">Help us improve quality. Your credit will be refunded.</p>
+
+    <div style="margin:18px 0;">
+      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;display:block;margin-bottom:10px;">Why is this lead bad? (select all that apply)</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="phone_invalid"> Phone number doesn't work
+        </label>
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="has_website"> Actually has a website
+        </label>
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="closed"> Business has permanently closed
+        </label>
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="wrong_info"> Wrong business info (address/name)
+        </label>
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="duplicate"> Duplicate of another lead
+        </label>
+        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
+          <input type="checkbox" value="other"> Other (please describe below)
+        </label>
+      </div>
+    </div>
+
+    <div style="margin:18px 0;">
+      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;display:block;margin-bottom:6px;">Additional notes (optional)</label>
+      <textarea id="reportNotes" rows="3" placeholder="Tell us more about what went wrong..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:22px;border-top:1px solid var(--border);padding-top:18px;">
+      <button class="btn btn-secondary" onclick="closeModal('report')" style="flex:1;">Cancel</button>
+      <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()" style="flex:2;background:var(--danger);">Submit & Refund Credit</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -537,7 +581,9 @@ async function generateLeads() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        searchString: query,
+        niche: niche,              // WHAT to search (e.g., "Restaurant")
+        city: city,                // WHERE — city (e.g., "Mumbai")
+        country: country,          // WHERE — country (e.g., "India")
         targetLeads: count,        // user wants this many NO-WEBSITE leads
         multiplier: 3,             // scrape 3x to compensate for filtering
       }),
@@ -988,13 +1034,81 @@ function copyContact(id) {
   navigator.clipboard.writeText(txt).then(() => toast("✓ Copied"));
 }
 function reportBad(id) {
-  if (!confirm("Report as bad lead? Credit will be refunded.")) return;
-  STATE.credits += STATE.unlocked[id].cost || 1;
-  logHistory(`Refunded: bad lead`, STATE.unlocked[id].cost || 1);
-  delete STATE.unlocked[id];
-  save();
-  renderLeads(); renderMyLeads(); closeModal("detail");
-  toast("✓ Refund issued");
+  // Store the lead being reported so submitReport() can access it
+  window.LF_REPORTING_LEAD_ID = id;
+  // Reset form
+  document.querySelectorAll('#modal-report input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('reportNotes').value = '';
+  openModal("report");
+}
+
+async function submitReport() {
+  const id = window.LF_REPORTING_LEAD_ID;
+  if (!id) return;
+  const U = STATE.unlocked[id];
+  if (!U) return;
+  const L = U.leadSnapshot;
+
+  // Collect selected reasons
+  const reasons = [];
+  document.querySelectorAll('#modal-report input[type="checkbox"]:checked').forEach(cb => {
+    reasons.push(cb.value);
+  });
+
+  if (reasons.length === 0) {
+    toast("Please select at least one reason", "danger");
+    return;
+  }
+
+  const notes = document.getElementById("reportNotes").value.trim();
+  const btn = document.getElementById("submitReportBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+
+  try {
+    if (!window.LF_USER) throw new Error("Not signed in");
+
+    const { error } = await supabaseClient
+      .from("bad_lead_reports")
+      .insert({
+        user_id: window.LF_USER.id,
+        user_email: window.LF_USER.email,
+        lead_id: L.id,
+        lead_name: L.name,
+        lead_niche: L.niche,
+        lead_address: L.address,
+        lead_phone: L.phone,
+        lead_email: L.email,
+        lead_city: L.city,
+        lead_country: L.countryName,
+        lead_gmb_url: L.gmb_url,
+        lead_rating: L.rating,
+        lead_reviews: L.reviews,
+        reasons: reasons,
+        notes: notes,
+        status: "open",
+      });
+
+    if (error) throw error;
+
+    // Refund credit + remove from unlocked
+    STATE.credits += U.cost || 1;
+    logHistory(`Refunded: bad lead reported (${reasons.join(", ")})`, U.cost || 1);
+    delete STATE.unlocked[id];
+    save();
+
+    closeModal("report");
+    closeModal("detail");
+    renderLeads();
+    renderMyLeads();
+    renderHistory();
+    toast("✓ Report submitted. Credit refunded.");
+  } catch (err) {
+    toast("Could not submit: " + err.message, "danger");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Submit & Refund Credit";
+  }
 }
 
 function renderMyLeads() {

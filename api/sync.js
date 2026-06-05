@@ -2,12 +2,16 @@
 // Triggers a new Apify Google Maps Scraper run on-demand.
 //
 // Body: {
-//   searchString: "plumbers in austin texas",
+//   niche: "Restaurant",       // WHAT to search
+//   city: "Mumbai",            // WHERE — city
+//   country: "India",          // WHERE — country
 //   targetLeads: 10,           // how many no-website leads user wants
 //   multiplier: 3              // scrape this much more to filter (default 3x)
 // }
 //
-// Returns the new datasetId — save it as APIFY_DATASET_ID env var to make it live.
+// Uses Apify's locationQuery to GEOGRAPHICALLY anchor the search — so
+// "Restaurant in Mumbai India" no longer returns places in Columbia, SC
+// just because their name contains "Mumbai".
 
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -21,29 +25,48 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  const searchString = body.searchString || body.query;
+
+  // Accept either separate fields (new) OR searchString (backward compat)
+  const niche = body.niche || "";
+  const city = body.city || "";
+  const country = body.country || "";
+  const legacySearchString = body.searchString || body.query;
+
   const targetLeads = parseInt(body.targetLeads || body.maxItems || 10);
   const multiplier = parseFloat(body.multiplier || 3);
-
-  // Calculate actual scrape count: target × multiplier
-  // This compensates for filtering out businesses WITH websites
   const actualScrapeCount = Math.ceil(targetLeads * multiplier);
 
-  if (!searchString) {
-    return res.status(400).json({ error: "Provide 'searchString' in JSON body, e.g. 'plumbers in austin'" });
+  // Validate input
+  if (!niche && !legacySearchString) {
+    return res.status(400).json({ error: "Provide 'niche' (e.g. 'Restaurant') in body" });
   }
+
+  // Build proper Apify input with GEO-ANCHORED search
+  const input = {
+    maxCrawledPlacesPerSearch: actualScrapeCount,
+    language: "en",
+    skipClosedPlaces: true,
+    scrapePlaceDetailPage: true,
+    includeWebResults: false,
+  };
+
+  // KEY FIX: split niche (what) from location (where)
+  if (niche && (city || country)) {
+    // New mode: geo-anchored search
+    input.searchStringsArray = [niche];                              // WHAT: "Restaurant"
+    input.locationQuery = [city, country].filter(Boolean).join(", ");// WHERE: "Mumbai, India"
+  } else {
+    // Legacy mode: just use the combined string
+    input.searchStringsArray = [legacySearchString || niche];
+  }
+
+  // Build a friendly display query for the response
+  const displayQuery = niche
+    ? `${niche} in ${[city, country].filter(Boolean).join(", ")}`
+    : (legacySearchString || "");
 
   try {
     const apifyUrl = `https://api.apify.com/v2/acts/${ACTOR_ID}/runs?token=${APIFY_TOKEN}`;
-
-    const input = {
-      searchStringsArray: [searchString],
-      maxCrawledPlacesPerSearch: actualScrapeCount,
-      language: "en",
-      skipClosedPlaces: true,
-      scrapePlaceDetailPage: true,
-      includeWebResults: false,
-    };
 
     const r = await fetch(apifyUrl, {
       method: "POST",
@@ -63,10 +86,12 @@ export default async function handler(req, res) {
       status: run.data.status,
       datasetId: run.data.defaultDatasetId,
       consoleUrl: `https://console.apify.com/actors/runs/${run.data.id}`,
+      query: displayQuery,
+      apifyInput: { searchStringsArray: input.searchStringsArray, locationQuery: input.locationQuery },
       targetLeads,
       actualScrapeCount,
       multiplier,
-      message: `Scrape started: ${actualScrapeCount} businesses will be scraped to find ~${targetLeads} without websites.`,
+      message: `Scrape started: ${actualScrapeCount} businesses will be scraped in ${input.locationQuery || "search text"} to find ~${targetLeads} without websites.`,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });

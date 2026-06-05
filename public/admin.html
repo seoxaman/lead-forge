@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LeadForge Admin — Bad Lead Reports</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = "https://wqzqzwswmflyuogdiprq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
+  // ===== ADMIN EMAILS — only these can access this page =====
+  const ADMIN_EMAILS = ["seoxaman@gmail.com"];
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ===== AUTH + ADMIN GUARD =====
+  (async () => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = "/login?redirect=/admin"; return; }
+      if (!ADMIN_EMAILS.includes(session.user.email)) {
+        document.body.innerHTML = `<div style="padding:80px 20px;text-align:center;font-family:system-ui;">
+          <h1 style="color:#DC2626;">🔒 Access denied</h1>
+          <p style="color:#6B7280;margin-top:12px;">Only admin emails can access this page. You're signed in as <strong>${session.user.email}</strong>.</p>
+          <p style="margin-top:24px;"><a href="/dashboard" style="color:#2E75B6;">← Back to dashboard</a></p>
+        </div>`;
+        return;
+      }
+      window.LF_USER = session.user;
+    } catch (err) {
+      window.location.href = "/login";
+    }
+  })();
+
+  async function lfLogout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "/";
+  }
+</script>
+<style>
+  :root {
+    --primary: #1F4E79; --accent: #2E75B6; --light: #DEEBF6;
+    --bg: #F7F9FC; --card: #FFFFFF; --text: #1F1F1F; --muted: #6B7280;
+    --border: #E5E7EB; --success: #16A34A; --warning: #F59E0B;
+    --danger: #DC2626; --gold: #B7791F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .nav { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 22px; font-weight: 800; }
+  .logo .tag { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 11px; margin-left: 8px; font-weight: 700; }
+  .nav-right { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+  .nav-right a { color: white; text-decoration: none; font-weight: 600; opacity: 0.9; }
+  .nav-right a:hover { opacity: 1; }
+  .nav-right button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+  .nav-right button:hover { background: rgba(255,255,255,0.25); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+  h1 { color: var(--text); font-size: 28px; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+  @media (max-width: 1000px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .stat-value { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 4px; letter-spacing: -0.5px; }
+  .stat-sub { font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 500; }
+  .stat.warn .stat-value { color: var(--warning); }
+  .stat.danger .stat-value { color: var(--danger); }
+  .stat.success .stat-value { color: var(--success); }
+
+  .toolbar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .toolbar select, .toolbar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; font-family: inherit; }
+  .toolbar input { min-width: 240px; }
+  .btn { padding: 8px 14px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #163C5E; }
+  .btn-ghost { background: white; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { background: var(--bg); }
+  .spacer { flex: 1; }
+
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--bg); color: var(--primary); padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #FAFBFC; }
+  .lead-name { font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+  .lead-sub { font-size: 11px; color: var(--muted); }
+  .reasons { display: flex; flex-wrap: wrap; gap: 4px; }
+  .reason-chip { background: #FEE2E2; color: var(--danger); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .status-pill { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
+  .status-open { background: #FEF3C7; color: var(--gold); }
+  .status-verified { background: #D1FAE5; color: var(--success); }
+  .status-rejected { background: #E5E7EB; color: var(--muted); }
+  .actions { display: flex; gap: 6px; }
+  .action-btn { padding: 4px 10px; border-radius: 6px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .action-verify { background: var(--success); color: white; }
+  .action-reject { background: var(--muted); color: white; }
+  .action-view { background: var(--light); color: var(--primary); }
+
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .empty h3 { color: var(--text); margin-bottom: 6px; }
+  .loading { padding: 60px; text-align: center; color: var(--muted); }
+  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--light); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Detail modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .modal-bg.active { display: flex; }
+  .modal { background: white; border-radius: 14px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; }
+  .modal h2 { color: var(--primary); margin-bottom: 8px; font-size: 22px; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--muted); }
+  .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row label { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+  .detail-row .val { color: var(--text); font-weight: 500; word-break: break-word; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: white; padding: 14px 22px; border-radius: 10px; font-weight: 600; transform: translateY(140%); transition: transform 0.25s; z-index: 200; }
+  .toast.show { transform: translateY(0); }
+  .toast.danger { background: var(--danger); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">Lead<span style="opacity:0.8;">Forge</span><span class="tag">ADMIN</span></div>
+  <div class="nav-right">
+    <a href="/dashboard">← Back to app</a>
+    <span id="adminEmail" style="opacity:0.8;font-size:13px;"></span>
+    <button onclick="lfLogout()">Sign out</button>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>Bad Lead Reports</h1>
+  <p class="sub">All bad lead reports submitted by users. Mark as verified to refund logic, or reject if false claim.</p>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-label">Total Reports</div><div class="stat-value" id="statTotal">—</div></div>
+    <div class="stat warn"><div class="stat-label">Open</div><div class="stat-value" id="statOpen">—</div></div>
+    <div class="stat success"><div class="stat-label">Verified</div><div class="stat-value" id="statVerified">—</div></div>
+    <div class="stat"><div class="stat-label">Rejected</div><div class="stat-value" id="statRejected">—</div></div>
+    <div class="stat"><div class="stat-label">Last 7 days</div><div class="stat-value" id="stat7day">—</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <select id="filterStatus" onchange="applyFilters()">
+      <option value="">All statuses</option>
+      <option value="open">Open</option>
+      <option value="verified">Verified</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <select id="filterCountry" onchange="applyFilters()">
+      <option value="">All countries</option>
+    </select>
+    <input type="search" id="searchInput" placeholder="Search by email, business name..." oninput="applyFilters()" />
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" onclick="loadReports()">🔄 Refresh</button>
+    <button class="btn btn-primary" onclick="exportCSV()">⬇ Export CSV</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Reported</th>
+          <th>User</th>
+          <th>Business</th>
+          <th>Location</th>
+          <th>Reasons</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="reportsBody">
+        <tr><td colspan="7" class="loading"><span class="spinner"></span> Loading reports...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STATE = {
+  reports: [],
+  filtered: [],
+  filters: { status: "", country: "", search: "" },
+};
+
+const REASON_LABELS = {
+  phone_invalid: "Bad phone",
+  has_website: "Has website",
+  closed: "Closed",
+  wrong_info: "Wrong info",
+  duplicate: "Duplicate",
+  other: "Other",
+};
+
+function toast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + type;
+  setTimeout(() => t.className = "toast " + type, 2500);
+}
+
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function timeAgo(ts) {
+  const m = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  if (m < 1440) return `${Math.floor(m / 60)} hr ago`;
+  if (m < 10080) return `${Math.floor(m / 1440)}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+async function loadReports() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("bad_lead_reports")
+      .select("*")
+      .order("reported_at", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    STATE.reports = data || [];
+    populateCountryFilter();
+    updateStats();
+    applyFilters();
+  } catch (err) {
+    document.getElementById("reportsBody").innerHTML =
+      `<tr><td colspan="7" class="empty"><h3>Could not load reports</h3><p>${escapeHtml(err.message)}</p></td></tr>`;
+  }
+}
+
+function populateCountryFilter() {
+  const sel = document.getElementById("filterCountry");
+  const countries = [...new Set(STATE.reports.map(r => r.lead_country).filter(Boolean))].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All countries</option>' +
+    countries.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  sel.value = current;
+}
+
+function updateStats() {
+  const r = STATE.reports;
+  document.getElementById("statTotal").textContent = r.length;
+  document.getElementById("statOpen").textContent = r.filter(x => x.status === "open").length;
+  document.getElementById("statVerified").textContent = r.filter(x => x.status === "verified").length;
+  document.getElementById("statRejected").textContent = r.filter(x => x.status === "rejected").length;
+  const week = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  document.getElementById("stat7day").textContent = r.filter(x => new Date(x.reported_at).getTime() > week).length;
+}
+
+function applyFilters() {
+  STATE.filters.status = document.getElementById("filterStatus").value;
+  STATE.filters.country = document.getElementById("filterCountry").value;
+  STATE.filters.search = document.getElementById("searchInput").value.toLowerCase();
+
+  STATE.filtered = STATE.reports.filter(r => {
+    if (STATE.filters.status && r.status !== STATE.filters.status) return false;
+    if (STATE.filters.country && r.lead_country !== STATE.filters.country) return false;
+    if (STATE.filters.search) {
+      const s = STATE.filters.search;
+      const blob = `${r.user_email} ${r.lead_name} ${r.lead_city} ${r.lead_country} ${r.lead_phone} ${(r.notes || "")}`.toLowerCase();
+      if (!blob.includes(s)) return false;
+    }
+    return true;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById("reportsBody");
+  if (STATE.filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty"><h3>No reports found</h3><p>Try changing filters, or wait for users to submit reports.</p></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = STATE.filtered.map(r => `
+    <tr>
+      <td>
+        <div style="font-weight:600;">${timeAgo(r.reported_at)}</div>
+        <div class="lead-sub">${new Date(r.reported_at).toLocaleDateString()}</div>
+      </td>
+      <td><div style="font-weight:600;font-size:12px;word-break:break-all;">${escapeHtml(r.user_email || "—")}</div></td>
+      <td>
+        <div class="lead-name">${escapeHtml(r.lead_name || "—")}</div>
+        <div class="lead-sub">${escapeHtml(r.lead_niche || "")}</div>
+        <div class="lead-sub" style="margin-top:4px;font-family:monospace;font-size:10px;">${escapeHtml((r.lead_phone || "—"))}</div>
+      </td>
+      <td>
+        <div>${escapeHtml(r.lead_city || "—")}</div>
+        <div class="lead-sub">${escapeHtml(r.lead_country || "")}</div>
+      </td>
+      <td>
+        <div class="reasons">
+          ${(r.reasons || []).map(rs => `<span class="reason-chip">${escapeHtml(REASON_LABELS[rs] || rs)}</span>`).join("")}
+        </div>
+        ${r.notes ? `<div class="lead-sub" style="margin-top:6px;font-style:italic;max-width:200px;">"${escapeHtml(r.notes.slice(0, 80))}${r.notes.length > 80 ? '...' : ''}"</div>` : ""}
+      </td>
+      <td><span class="status-pill status-${r.status}">${r.status}</span></td>
+      <td>
+        <div class="actions">
+          <button class="action-btn action-view" onclick="openDetail('${r.id}')">View</button>
+          ${r.status === "open" ? `
+            <button class="action-btn action-verify" onclick="updateStatus('${r.id}', 'verified')">✓</button>
+            <button class="action-btn action-reject" onclick="updateStatus('${r.id}', 'rejected')">✕</button>
+          ` : ""}
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function updateStatus(id, newStatus) {
+  try {
+    const { error } = await supabaseClient
+      .from("bad_lead_reports")
+      .update({ status: newStatus, reviewed_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+    // Update local state
+    const r = STATE.reports.find(x => x.id === id);
+    if (r) { r.status = newStatus; r.reviewed_at = new Date().toISOString(); }
+    updateStats();
+    applyFilters();
+    toast(`✓ Marked as ${newStatus}`);
+  } catch (err) {
+    toast("Failed: " + err.message, "danger");
+  }
+}
+
+function openDetail(id) {
+  const r = STATE.reports.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById("detailContent").innerHTML = `
+    <button class="modal-close" onclick="closeDetail()">×</button>
+    <h2>${escapeHtml(r.lead_name)}</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">Reported by ${escapeHtml(r.user_email)} on ${new Date(r.reported_at).toLocaleString()}</p>
+
+    <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Report</h3>
+    <div class="detail-row"><label>Reasons</label><div class="val"><div class="reasons">${(r.reasons || []).map(rs => `<span class="reason-chip">${escapeHtml(REASON_LABELS[rs] || rs)}</span>`).join("")}</div></div></div>
+    <div class="detail-row"><label>Notes</label><div class="val">${escapeHtml(r.notes || "—")}</div></div>
+    <div class="detail-row"><label>Status</label><div class="val"><span class="status-pill status-${r.status}">${r.status}</span></div></div>
+
+    <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:24px 0 8px;">Lead snapshot</h3>
+    <div class="detail-row"><label>Niche</label><div class="val">${escapeHtml(r.lead_niche || "—")}</div></div>
+    <div class="detail-row"><label>Address</label><div class="val">${escapeHtml(r.lead_address || "—")}</div></div>
+    <div class="detail-row"><label>City / Country</label><div class="val">${escapeHtml(r.lead_city || "—")}, ${escapeHtml(r.lead_country || "—")}</div></div>
+    <div class="detail-row"><label>Phone</label><div class="val">${escapeHtml(r.lead_phone || "—")}</div></div>
+    <div class="detail-row"><label>Email</label><div class="val">${escapeHtml(r.lead_email || "—")}</div></div>
+    <div class="detail-row"><label>Rating / Reviews</label><div class="val">${r.lead_rating || "—"} ⭐ · ${r.lead_reviews || 0} reviews</div></div>
+    ${r.lead_gmb_url ? `<div class="detail-row"><label>GMB</label><div class="val"><a href="${escapeHtml(r.lead_gmb_url)}" target="_blank" style="color:var(--accent);">Open in Maps ↗</a></div></div>` : ""}
+
+    ${r.status === "open" ? `
+      <div style="display:flex;gap:10px;margin-top:24px;border-top:1px solid var(--border);padding-top:18px;">
+        <button class="btn btn-ghost" onclick="closeDetail()" style="flex:1;">Close</button>
+        <button class="action-btn action-reject" onclick="updateStatus('${r.id}', 'rejected');closeDetail();" style="flex:1;padding:10px;">✕ Reject</button>
+        <button class="action-btn action-verify" onclick="updateStatus('${r.id}', 'verified');closeDetail();" style="flex:1;padding:10px;">✓ Verify</button>
+      </div>
+    ` : ""}
+  `;
+  document.getElementById("detailModal").classList.add("active");
+}
+function closeDetail() {
+  document.getElementById("detailModal").classList.remove("active");
+}
+document.getElementById("detailModal").addEventListener("click", e => {
+  if (e.target.id === "detailModal") closeDetail();
+});
+
+function exportCSV() {
+  if (STATE.filtered.length === 0) { toast("No data to export", "danger"); return; }
+  const rows = [["Date", "User Email", "Business", "Niche", "City", "Country", "Phone", "Reasons", "Notes", "Status"]];
+  STATE.filtered.forEach(r => {
+    rows.push([
+      new Date(r.reported_at).toLocaleString(),
+      r.user_email || "",
+      r.lead_name || "",
+      r.lead_niche || "",
+      r.lead_city || "",
+      r.lead_country || "",
+      r.lead_phone || "",
+      (r.reasons || []).join("; "),
+      (r.notes || "").replace(/\n/g, " "),
+      r.status,
+    ]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `bad_lead_reports_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`✓ Exported ${STATE.filtered.length} reports`);
+}
+
+// Init
+setTimeout(() => {
+  if (window.LF_USER) {
+    document.getElementById("adminEmail").textContent = window.LF_USER.email;
+    loadReports();
+  }
+}, 500);
+</script>
+</body>
+</html>
