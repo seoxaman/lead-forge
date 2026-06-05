@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LeadForge Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ===== SUPABASE CONFIG — REPLACE THESE WITH YOUR PROJECT'S VALUES =====
+  const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ===== AUTH GUARD — redirects to /login if not signed in =====
+  (async () => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = "/login?redirect=/dashboard";
+        return;
+      }
+      window.LF_USER = session.user;
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      window.location.href = "/login";
+    }
+  })();
+
+  async function lfLogout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "/";
+  }
+</script>
+<style>
+  :root {
+    --primary: #1F4E79; --accent: #2E75B6; --light: #DEEBF6;
+    --bg: #F7F9FC; --card: #FFFFFF; --text: #1F1F1F; --muted: #6B7280;
+    --border: #E5E7EB; --success: #16A34A; --warning: #F59E0B;
+    --danger: #DC2626; --gold: #B7791F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; }
+
+  .nav { background: white; border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .logo { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .credit-pill { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 8px 18px; border-radius: 24px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(31, 78, 121, 0.25); border: none; }
+  .credit-pill:hover { transform: translateY(-1px); transition: transform 0.15s; }
+  .nav-tab { background: none; border: none; padding: 8px 14px; cursor: pointer; font-size: 14px; color: var(--muted); font-weight: 500; border-radius: 6px; }
+  .nav-tab.active { color: var(--primary); background: var(--light); }
+  .nav-tab:hover:not(.active) { background: #F3F4F6; }
+  .live-tag { background: var(--success); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; letter-spacing: 0.5px; margin-left: 8px; }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+  .hero { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px; }
+  .hero h1 { font-size: 24px; margin-bottom: 6px; }
+  .hero p { opacity: 0.9; font-size: 14px; max-width: 720px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); margin-top: 6px; }
+  .stat-sub { font-size: 12px; color: var(--success); margin-top: 4px; font-weight: 500; }
+
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+
+  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; height: fit-content; position: sticky; top: 88px; }
+  .filters h3 { font-size: 14px; color: var(--primary); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+  .filter-group { margin-bottom: 16px; }
+  .filter-group label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .filter-group select, .filter-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; color: var(--text); font-family: inherit; }
+  .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.15); }
+  .filter-group input[type="range"] { padding: 0; accent-color: var(--accent); }
+  .range-value { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); margin-top: 6px; cursor: pointer; }
+  .reset-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .reset-btn:hover { background: var(--light); color: var(--primary); border-color: var(--accent); }
+  .filter-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .generate-btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 15px;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(31, 78, 121, 0.3);
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(31, 78, 121, 0.4); }
+  .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .browse-btn {
+    width: 100%; padding: 10px; background: white; color: var(--primary);
+    border: 1px solid var(--border); border-radius: 8px; font-weight: 600; font-size: 13px;
+    cursor: pointer; margin-top: 8px;
+  }
+  .browse-btn:hover { background: var(--light); border-color: var(--accent); }
+
+  .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .results-count { font-size: 14px; color: var(--muted); }
+  .results-count strong { color: var(--primary); }
+  .sort { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 13px; }
+
+  .lead-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .lead-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: all 0.15s; position: relative; }
+  .lead-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(31, 78, 121, 0.08); }
+  .lead-card.unlocked { border-color: var(--success); background: linear-gradient(180deg, #F0FDF4 0%, white 30%); }
+  .lead-card.unlocked::before { content: "✓ Unlocked"; position: absolute; top: 12px; right: 12px; background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+
+  .lead-name { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; padding-right: 60px; }
+  .lead-niche { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 10px; }
+  .lead-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .badge { background: #F3F4F6; padding: 3px 10px; border-radius: 12px; font-size: 12px; color: var(--text); }
+  .badge.rating { background: #FEF3C7; color: var(--gold); font-weight: 600; }
+  .badge.reviews { background: var(--light); color: var(--primary); }
+  .badge.no-site { background: #FEE2E2; color: var(--danger); font-weight: 600; }
+
+  .contact-row { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; padding: 10px; background: #FAFAFA; border-radius: 8px; font-size: 13px; position: relative; }
+  .contact-row.locked { filter: blur(4px); user-select: none; pointer-events: none; }
+  .lock-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(31, 78, 121, 0.04); border-radius: 8px; pointer-events: none; color: var(--primary); font-weight: 600; font-size: 13px; gap: 6px; }
+  .contact-line { display: flex; gap: 6px; }
+  .contact-line strong { color: var(--muted); min-width: 22px; }
+  .contact-line span { word-break: break-word; flex: 1; }
+
+  .lead-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .btn { border: none; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.12s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #163C5E; }
+  .btn-secondary { background: white; color: var(--primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--light); border-color: var(--accent); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .modal-bg.active { display: flex; }
+  .modal { background: white; border-radius: 14px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+  .modal h2 { color: var(--primary); margin-bottom: 6px; font-size: 22px; }
+  .modal .sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--muted); }
+  .modal-close:hover { background: #E5E7EB; color: var(--text); }
+
+  .price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  @media (max-width: 600px) { .price-grid { grid-template-columns: 1fr; } }
+  .price-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.15s; position: relative; }
+  .price-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .price-card.popular { border-color: var(--accent); background: linear-gradient(180deg, var(--light) 0%, white 50%); }
+  .price-card.popular::before { content: "MOST POPULAR"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 3px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+  .price-name { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .price-amount { font-size: 32px; font-weight: 800; color: var(--primary); margin: 6px 0; }
+  .price-credits { color: var(--accent); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+  .price-effective { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .price-bonus { font-size: 12px; color: var(--success); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .detail-grid > div { background: #FAFAFA; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+  .detail-grid label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+  .detail-grid .val { font-weight: 600; color: var(--text); word-break: break-word; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .empty { background: var(--card); border: 2px dashed var(--border); border-radius: 12px; padding: 60px 20px; text-align: center; color: var(--muted); grid-column: 1/-1; }
+  .empty h3 { color: var(--text); margin-bottom: 8px; }
+
+  .saved-table { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; border-collapse: collapse; overflow: hidden; }
+  .saved-table th { background: var(--light); color: var(--primary); padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .saved-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .saved-table tr:last-child td { border-bottom: none; }
+  .saved-table tr:hover td { background: #FAFAFA; }
+  .status-pill { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-cold { background: #F3F4F6; color: var(--muted); }
+  .status-contacted { background: var(--light); color: var(--primary); }
+  .status-replied { background: #FEF3C7; color: var(--gold); }
+  .status-closed { background: #D1FAE5; color: var(--success); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: white; padding: 14px 22px; border-radius: 10px; box-shadow: 0 8px 24px rgba(22, 163, 74, 0.35); font-weight: 600; transform: translateY(140%); transition: transform 0.25s; z-index: 200; }
+  .toast.show { transform: translateY(0); }
+  .toast.danger { background: var(--danger); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.35); }
+
+  .loading { display: flex; justify-content: center; align-items: center; padding: 60px; color: var(--muted); gap: 12px; }
+  .spinner { width: 20px; height: 20px; border: 3px solid var(--light); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-banner { background: #FEE2E2; border: 1px solid var(--danger); color: var(--danger); padding: 14px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+
+  /* Progress banner for scraping */
+  .progress-banner {
+    background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+    border: 1px solid var(--warning);
+    border-radius: 12px; padding: 18px 22px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px; position: relative;
+  }
+  .progress-banner .icon {
+    width: 40px; height: 40px; border: 4px solid #FDE68A; border-top-color: var(--warning);
+    border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0;
+  }
+  .progress-banner .body { flex: 1; }
+  .progress-banner .body strong { color: #92400E; display: block; margin-bottom: 4px; font-size: 15px; }
+  .progress-banner .body small { color: #78350F; font-size: 13px; }
+  .progress-banner .timer { font-family: monospace; background: white; padding: 6px 12px; border-radius: 6px; color: var(--warning); font-weight: 700; font-size: 14px; }
+  .progress-banner .cancel-x {
+    background: white; border: 1px solid var(--warning); color: var(--warning);
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px;
+  }
+
+  /* Cached query chip */
+  .saved-queries { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .query-chip {
+    background: var(--light); color: var(--primary); padding: 4px 10px;
+    border-radius: 12px; font-size: 12px; cursor: pointer; border: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .query-chip:hover { background: #C7DEEF; }
+  .query-chip .x { color: var(--danger); font-weight: 700; padding-left: 4px; }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">Lead<span>Forge</span><span class="live-tag">LIVE</span></div>
+  <div class="nav-right">
+    <button class="nav-tab active" data-tab="explore">Explore</button>
+    <button class="nav-tab" data-tab="my-leads">My Leads (<span id="myLeadsCount">0</span>)</button>
+    <button class="nav-tab" data-tab="history">History</button>
+    <button class="credit-pill" onclick="openModal('pricing')">
+      <span>💎</span><span id="creditDisplay">10</span> credits
+    </button>
+    <div style="display:flex;align-items:center;gap:6px;border-left:1px solid var(--border);padding-left:12px;margin-left:4px;">
+      <span id="userEmail" style="font-size:13px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <button onclick="lfLogout()" title="Sign out" style="background:#F3F4F6;border:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ===== EXPLORE TAB ===== -->
+  <div id="tab-explore" class="tab-content active">
+    <div class="hero">
+      <h1>🔍 Generate leads on-demand from any location</h1>
+      <p>Pick a country, city, and category. Apify scrapes Google Maps live and shows verified businesses without websites. Each scrape takes 5–10 minutes and the results are cached forever.</p>
+    </div>
+
+    <div id="errorBanner"></div>
+    <div id="progressBanner"></div>
+
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Current Leads</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub" id="statSource">loading...</div></div>
+      <div class="stat"><div class="stat-label">Matching Filters</div><div class="stat-value" id="statFiltered">—</div><div class="stat-sub">on screen</div></div>
+      <div class="stat"><div class="stat-label">Avg Rating</div><div class="stat-value" id="statRating">—</div><div class="stat-sub">⭐ quality</div></div>
+      <div class="stat"><div class="stat-label">Your Unlocked</div><div class="stat-value" id="statUnlocked">0</div><div class="stat-sub">saved forever</div></div>
+    </div>
+
+    <div class="layout">
+      <aside class="filters">
+        <h3>Generate Leads <button class="reset-btn" onclick="resetFilters()">Reset</button></h3>
+
+        <div class="filter-group">
+          <label>Country *</label>
+          <select id="fCountry"></select>
+        </div>
+        <div class="filter-group">
+          <label>City *</label>
+          <input type="text" id="fCity" placeholder="e.g., Mumbai, Austin, London" />
+        </div>
+        <div class="filter-group">
+          <label>Category / Niche *</label>
+          <select id="fNiche"></select>
+        </div>
+        <div class="filter-group">
+          <label>No-website leads target</label>
+          <select id="fCount">
+            <option value="10" selected>10 leads (scrapes ~30, ~$0.24)</option>
+            <option value="25">25 leads (scrapes ~75, ~$0.60)</option>
+            <option value="50">50 leads (scrapes ~150, ~$1.20)</option>
+            <option value="100">100 leads (scrapes ~300, ~$2.40)</option>
+          </select>
+          <small style="display:block;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.4;">
+            Apify ko 3x scrape karna padta hai because most GMB businesses have websites. Yeh number 100% no-website leads ka hai.
+          </small>
+        </div>
+
+        <button class="generate-btn" id="generateBtn" onclick="generateLeads()">
+          <span>⚡</span> Generate Leads
+        </button>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group">
+          <label>Min Rating: <span id="ratingVal">0.0</span> ⭐</label>
+          <input type="range" id="fRating" min="0" max="5" step="0.1" value="0">
+          <div class="range-value"><span>0</span><span>5</span></div>
+        </div>
+        <div class="filter-group">
+          <label>Min Reviews: <span id="reviewsVal">0</span></label>
+          <input type="range" id="fReviews" min="0" max="500" step="5" value="0">
+          <div class="range-value"><span>0</span><span>500+</span></div>
+        </div>
+        <div class="filter-group">
+          <label class="checkbox-row"><input type="checkbox" id="fHasPhone"> Has phone</label>
+          <label class="checkbox-row"><input type="checkbox" id="fHasEmail"> Has email</label>
+        </div>
+
+        <button class="browse-btn" onclick="applyClientFilters()">Apply Client Filters</button>
+
+        <div id="savedQueriesArea" style="margin-top:18px;display:none;">
+          <label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">Past Searches (cached)</label>
+          <div class="saved-queries" id="savedQueries"></div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="results-header">
+          <div class="results-count">Showing <strong id="resultsCount">—</strong> leads <span id="activeQueryLabel" style="color:var(--accent);font-weight:600;"></span></div>
+          <select class="sort" id="sortBy" onchange="renderLeads()">
+            <option value="rating">Sort: Highest rated</option>
+            <option value="reviews">Sort: Most reviewed</option>
+            <option value="recent">Sort: Recently added</option>
+          </select>
+        </div>
+        <div id="leadGrid" class="lead-grid">
+          <div class="loading"><div class="spinner"></div> Loading leads...</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== MY LEADS TAB ===== -->
+  <div id="tab-my-leads" class="tab-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div><h2 style="color:var(--primary);">My Unlocked Leads</h2><p style="color:var(--muted);font-size:14px;">Your private list — saved forever in your browser.</p></div>
+      <button class="btn btn-primary" style="max-width:180px;" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div id="myLeadsView"></div>
+  </div>
+
+  <!-- ===== HISTORY TAB ===== -->
+  <div id="tab-history" class="tab-content">
+    <h2 style="color:var(--primary);margin-bottom:18px;">Credit History</h2>
+    <table class="saved-table">
+      <thead><tr><th>Date</th><th>Action</th><th>Credits</th><th>Balance</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ===== PRICING MODAL ===== -->
+<div class="modal-bg" id="modal-pricing">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('pricing')">×</button>
+    <h2>Buy credits</h2>
+    <p class="sub">1 credit = 1 unlocked lead. No subscription. Demo mode — Stripe integration is the next step.</p>
+    <div class="price-grid">
+      <div class="price-card" onclick="buyCredits(20, 19)"><div class="price-name">Starter</div><div class="price-amount">$19</div><div class="price-credits">20 credits</div><div class="price-effective">$0.95 per lead</div></div>
+      <div class="price-card popular" onclick="buyCredits(100, 79, 5)"><div class="price-name">Pro</div><div class="price-amount">$79</div><div class="price-credits">100 credits</div><div class="price-effective">$0.79 per lead</div><div class="price-bonus">+ 5 bonus</div></div>
+      <div class="price-card" onclick="buyCredits(500, 299, 50)"><div class="price-name">Agency</div><div class="price-amount">$299</div><div class="price-credits">500 credits</div><div class="price-effective">$0.60 per lead</div><div class="price-bonus">+ 50 bonus</div></div>
+      <div class="price-card" onclick="buyCredits(2000, 899, 200)"><div class="price-name">Scale</div><div class="price-amount">$899</div><div class="price-credits">2,000 credits</div><div class="price-effective">$0.45 per lead</div><div class="price-bonus">+ 200 bonus</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-detail"><div class="modal" id="detailContent"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Hardcoded filter lists =====
+const COUNTRIES = [
+  ["", "— Select country —"],
+  ["United States", "🇺🇸 United States"],
+  ["Canada", "🇨🇦 Canada"],
+  ["United Kingdom", "🇬🇧 United Kingdom"],
+  ["Australia", "🇦🇺 Australia"],
+  ["India", "🇮🇳 India"],
+  ["United Arab Emirates", "🇦🇪 United Arab Emirates"],
+  ["Saudi Arabia", "🇸🇦 Saudi Arabia"],
+  ["Singapore", "🇸🇬 Singapore"],
+  ["Germany", "🇩🇪 Germany"],
+  ["France", "🇫🇷 France"],
+  ["Spain", "🇪🇸 Spain"],
+  ["Italy", "🇮🇹 Italy"],
+  ["Netherlands", "🇳🇱 Netherlands"],
+  ["Belgium", "🇧🇪 Belgium"],
+  ["Sweden", "🇸🇪 Sweden"],
+  ["Norway", "🇳🇴 Norway"],
+  ["Denmark", "🇩🇰 Denmark"],
+  ["Finland", "🇫🇮 Finland"],
+  ["Ireland", "🇮🇪 Ireland"],
+  ["Switzerland", "🇨🇭 Switzerland"],
+  ["Austria", "🇦🇹 Austria"],
+  ["Portugal", "🇵🇹 Portugal"],
+  ["Poland", "🇵🇱 Poland"],
+  ["New Zealand", "🇳🇿 New Zealand"],
+  ["South Africa", "🇿🇦 South Africa"],
+  ["Brazil", "🇧🇷 Brazil"],
+  ["Mexico", "🇲🇽 Mexico"],
+  ["Argentina", "🇦🇷 Argentina"],
+  ["Chile", "🇨🇱 Chile"],
+  ["Colombia", "🇨🇴 Colombia"],
+  ["Japan", "🇯🇵 Japan"],
+  ["South Korea", "🇰🇷 South Korea"],
+  ["Indonesia", "🇮🇩 Indonesia"],
+  ["Philippines", "🇵🇭 Philippines"],
+  ["Vietnam", "🇻🇳 Vietnam"],
+  ["Thailand", "🇹🇭 Thailand"],
+  ["Malaysia", "🇲🇾 Malaysia"],
+  ["Pakistan", "🇵🇰 Pakistan"],
+  ["Bangladesh", "🇧🇩 Bangladesh"],
+  ["Sri Lanka", "🇱🇰 Sri Lanka"],
+  ["Nepal", "🇳🇵 Nepal"],
+  ["Turkey", "🇹🇷 Turkey"],
+  ["Egypt", "🇪🇬 Egypt"],
+  ["Nigeria", "🇳🇬 Nigeria"],
+  ["Kenya", "🇰🇪 Kenya"],
+  ["Ghana", "🇬🇭 Ghana"],
+  ["Morocco", "🇲🇦 Morocco"],
+  ["Israel", "🇮🇱 Israel"],
+  ["Qatar", "🇶🇦 Qatar"],
+  ["Kuwait", "🇰🇼 Kuwait"],
+  ["Oman", "🇴🇲 Oman"],
+  ["Bahrain", "🇧🇭 Bahrain"],
+];
+
+const NICHES = [
+  "— Select category —",
+  "Plumber", "Electrician", "HVAC Contractor", "Roofer", "Painter", "Carpenter", "Handyman",
+  "Cleaning Service", "Pest Control", "Landscaper", "Locksmith", "Moving Company",
+  "Auto Repair Shop", "Mechanic", "Tire Shop", "Car Wash", "Auto Detailing",
+  "Restaurant", "Cafe", "Bakery", "Pizza Restaurant", "Catering Service", "Bar", "Pub", "Food Truck",
+  "Dentist", "Doctor", "Chiropractor", "Physiotherapist", "Optometrist", "Veterinarian", "Pharmacy",
+  "Lawyer", "Accountant", "Real Estate Agent", "Insurance Agency", "Financial Advisor", "Notary",
+  "Hair Salon", "Barber Shop", "Nail Salon", "Massage", "Day Spa", "Beauty Salon",
+  "Yoga Studio", "Gym", "Personal Trainer", "Martial Arts School", "Dance Studio",
+  "Photographer", "Wedding Planner", "Event Planner", "DJ Service",
+  "Florist", "Jeweler", "Tailor", "Dry Cleaner", "Shoe Repair",
+  "Tutor", "Music Teacher", "Driving School", "Art Class",
+  "Pet Grooming", "Dog Trainer", "Pet Boarding",
+  "Daycare", "Preschool", "Summer Camp",
+  "Construction Company", "Architect", "Interior Designer",
+  "Travel Agency", "Tour Operator",
+  "Print Shop", "Sign Maker", "Marketing Agency",
+];
+
+// ===== STATE =====
+const STATE = {
+  // active dataset(s) — IDs we're currently viewing
+  activeDatasets: [],   // array of {datasetId, query, scrapedAt, leadCount}
+  activeQueryLabel: "",
+  allLeads: [],         // full unfiltered list from server
+  filteredLeads: [],    // after client-side filters
+  unlocked: JSON.parse(localStorage.getItem("lf_unlocked") || "{}"),
+  credits: parseInt(localStorage.getItem("lf_credits") || "10"),
+  history: JSON.parse(localStorage.getItem("lf_history") || "[]"),
+  savedQueries: JSON.parse(localStorage.getItem("lf_savedQueries") || "[]"),  // [{query, datasetId, scrapedAt, leadCount}]
+  pendingRun: JSON.parse(localStorage.getItem("lf_pendingRun") || "null"),    // {runId, query, datasetId, startedAt}
+  filters: { country: "", city: "", niche: "", count: 100, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false },
+  sort: "rating",
+};
+
+function save() {
+  localStorage.setItem("lf_unlocked", JSON.stringify(STATE.unlocked));
+  localStorage.setItem("lf_credits", String(STATE.credits));
+  localStorage.setItem("lf_history", JSON.stringify(STATE.history));
+  localStorage.setItem("lf_savedQueries", JSON.stringify(STATE.savedQueries));
+  localStorage.setItem("lf_pendingRun", JSON.stringify(STATE.pendingRun));
+}
+
+function logHistory(action, delta) {
+  STATE.history.unshift({ date: new Date().toLocaleString(), action, delta, balance: STATE.credits });
+  STATE.history = STATE.history.slice(0, 50);
+}
+
+// ===== Populate dropdowns =====
+function populateFilters() {
+  const c = document.getElementById("fCountry");
+  c.innerHTML = "";
+  COUNTRIES.forEach(([val, label]) => {
+    const o = document.createElement("option");
+    o.value = val; o.textContent = label;
+    c.appendChild(o);
+  });
+
+  const n = document.getElementById("fNiche");
+  n.innerHTML = "";
+  NICHES.forEach((label, idx) => {
+    const o = document.createElement("option");
+    o.value = idx === 0 ? "" : label; o.textContent = label;
+    n.appendChild(o);
+  });
+}
+
+// ===== Build search query string for Apify =====
+function buildQuery(country, city, niche) {
+  // e.g., "Plumber in Mumbai India"
+  const parts = [niche];
+  if (city) parts.push("in", city);
+  if (country) parts.push(country);
+  return parts.filter(Boolean).join(" ").trim();
+}
+
+// ===== Generate Leads =====
+async function generateLeads() {
+  const country = document.getElementById("fCountry").value.trim();
+  const city = document.getElementById("fCity").value.trim();
+  const niche = document.getElementById("fNiche").value.trim();
+  const count = parseInt(document.getElementById("fCount").value);
+
+  if (!country || !city || !niche) {
+    toast("Please pick Country, City, and Category", "danger");
+    return;
+  }
+
+  const query = buildQuery(country, city, niche);
+
+  // Check cache: is there a recent dataset for this exact query?
+  const cached = STATE.savedQueries.find(q => q.query.toLowerCase() === query.toLowerCase());
+  if (cached) {
+    if (!confirm(`Aapne yeh search 1 baar pehle ki thi (${cached.leadCount} leads found, ${timeAgo(cached.scrapedAt)}).\n\nCached results dikhayein? (instant, free)\n\nOK = Use cache | Cancel = Generate fresh from Apify`)) {
+      // user wants fresh — proceed to scrape
+    } else {
+      // use cache
+      STATE.activeDatasets = [cached];
+      STATE.activeQueryLabel = `(cached: ${query})`;
+      await loadLeads();
+      toast(`✓ Showing cached ${cached.leadCount} leads`);
+      return;
+    }
+  }
+
+  // Trigger Apify scrape
+  document.getElementById("generateBtn").disabled = true;
+  document.getElementById("generateBtn").innerHTML = "<span>⏳</span> Starting scrape...";
+
+  try {
+    const r = await fetch("/api/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        searchString: query,
+        targetLeads: count,        // user wants this many NO-WEBSITE leads
+        multiplier: 3,             // scrape 3x to compensate for filtering
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || "Failed to start scrape");
+
+    // Save pending run
+    STATE.pendingRun = {
+      runId: data.runId,
+      datasetId: data.datasetId,
+      query,
+      country, city, niche, count,
+      startedAt: Date.now(),
+    };
+    save();
+
+    showProgressBanner();
+    startPolling();
+    toast(`✓ Scrape started: "${query}"`);
+  } catch (err) {
+    toast("Error: " + err.message, "danger");
+  } finally {
+    document.getElementById("generateBtn").disabled = false;
+    document.getElementById("generateBtn").innerHTML = "<span>⚡</span> Generate Leads";
+  }
+}
+
+// ===== Polling for Apify run =====
+let pollInterval = null;
+let timerInterval = null;
+
+function showProgressBanner() {
+  const p = STATE.pendingRun;
+  if (!p) return;
+  const banner = document.getElementById("progressBanner");
+  banner.innerHTML = `
+    <div class="progress-banner">
+      <div class="icon"></div>
+      <div class="body">
+        <strong>Scraping in progress: "${escapeHtml(p.query)}"</strong>
+        <small>Expected 5–${p.count > 200 ? "20" : "10"} minutes. You can leave this page open or close it — we'll resume when you come back.</small>
+      </div>
+      <div class="timer" id="elapsedTimer">0:00</div>
+      <button class="cancel-x" onclick="cancelRun()" title="Cancel">×</button>
+    </div>
+  `;
+}
+
+function hideProgressBanner() {
+  document.getElementById("progressBanner").innerHTML = "";
+}
+
+function updateTimer() {
+  if (!STATE.pendingRun) return;
+  const sec = Math.floor((Date.now() - STATE.pendingRun.startedAt) / 1000);
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  const el = document.getElementById("elapsedTimer");
+  if (el) el.textContent = `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+async function pollRunStatus() {
+  if (!STATE.pendingRun) return;
+  try {
+    const r = await fetch(`/api/run-status?runId=${STATE.pendingRun.runId}`);
+    const data = await r.json();
+    if (!r.ok) return; // try again next interval
+
+    if (data.isDone) {
+      stopPolling();
+      if (data.isSuccess) {
+        // Save to cache
+        const saved = {
+          query: STATE.pendingRun.query,
+          datasetId: STATE.pendingRun.datasetId,
+          scrapedAt: Date.now(),
+          leadCount: data.itemCount || 0,
+        };
+        STATE.savedQueries.unshift(saved);
+        STATE.savedQueries = STATE.savedQueries.slice(0, 20); // keep last 20
+        STATE.pendingRun = null;
+        save();
+
+        STATE.activeDatasets = [saved];
+        STATE.activeQueryLabel = `(${saved.query})`;
+        hideProgressBanner();
+        await loadLeads();
+        renderSavedQueries();
+        toast(`✓ Done! ${saved.leadCount} leads ready.`);
+      } else {
+        STATE.pendingRun = null;
+        save();
+        hideProgressBanner();
+        toast(`Scrape failed: ${data.status}`, "danger");
+      }
+    }
+  } catch (err) {
+    console.error("Poll error", err);
+  }
+}
+
+function startPolling() {
+  stopPolling();
+  pollInterval = setInterval(pollRunStatus, 30000); // every 30s
+  timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+  pollRunStatus(); // also poll immediately
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+async function cancelRun() {
+  if (!STATE.pendingRun) return;
+  if (!confirm("Cancel this scrape?\n\n✓ Apify scrape will be STOPPED (no more charges)\n✓ Whatever leads were scraped so far will be SHOWN below\n✓ Partial results saved to cache")) return;
+
+  const pending = STATE.pendingRun;
+
+  // Show cancelling state in banner
+  const banner = document.getElementById("progressBanner");
+  banner.innerHTML = `
+    <div class="progress-banner" style="background:linear-gradient(135deg,#FEE2E2,#FECACA);border-color:var(--danger);">
+      <div class="icon" style="border-color:#FCA5A5;border-top-color:var(--danger);"></div>
+      <div class="body">
+        <strong style="color:#991B1B;">Stopping scrape & fetching partial results...</strong>
+        <small style="color:#7F1D1D;">Aborting Apify run for "${escapeHtml(pending.query)}"</small>
+      </div>
+    </div>
+  `;
+
+  try {
+    // 1. Tell Apify to abort the run (stops further charges)
+    const r = await fetch("/api/abort-run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ runId: pending.runId }),
+    });
+    const data = await r.json();
+
+    // 2. Stop local polling regardless
+    stopPolling();
+
+    if (!r.ok) {
+      console.error("Abort failed:", data);
+      // Still continue — Apify might already be done, try fetching anyway
+    }
+
+    const itemCount = data.itemCount || 0;
+
+    // 3. Brief pause to let Apify flush dataset (~2 seconds)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // 4. Save partial dataset to cache (so user can return to it)
+    const partialQuery = {
+      query: pending.query + " (partial)",
+      datasetId: pending.datasetId,
+      scrapedAt: Date.now(),
+      leadCount: itemCount,
+      isPartial: true,
+    };
+    STATE.savedQueries.unshift(partialQuery);
+    STATE.savedQueries = STATE.savedQueries.slice(0, 20);
+    STATE.pendingRun = null;
+    save();
+
+    // 5. Display partial results
+    STATE.activeDatasets = [partialQuery];
+    STATE.activeQueryLabel = `(${pending.query} — partial, ${itemCount} leads)`;
+    hideProgressBanner();
+    await loadLeads();
+    renderSavedQueries();
+
+    if (itemCount > 0) {
+      toast(`✓ Scrape stopped. ${itemCount} leads loaded.`);
+    } else {
+      toast(`Scrape cancelled. No leads were scraped yet.`, "danger");
+    }
+  } catch (err) {
+    console.error("Cancel error:", err);
+    stopPolling();
+    STATE.pendingRun = null;
+    save();
+    hideProgressBanner();
+    toast("Error: " + err.message, "danger");
+  }
+}
+
+// ===== Load leads from active datasets =====
+async function loadLeads() {
+  const grid = document.getElementById("leadGrid");
+
+  // EMPTY STATE: no active dataset = no leads displayed
+  if (STATE.activeDatasets.length === 0) {
+    STATE.allLeads = [];
+    STATE.filteredLeads = [];
+    document.getElementById("statTotal").textContent = "0";
+    document.getElementById("statSource").textContent = "no search yet";
+    document.getElementById("statFiltered").textContent = "0";
+    document.getElementById("statFilteredSub") && (document.getElementById("statFilteredSub").textContent = "—");
+    document.getElementById("statRating").textContent = "—";
+    document.getElementById("resultsCount").textContent = "0";
+    document.getElementById("activeQueryLabel").textContent = "";
+
+    const hasSaved = STATE.savedQueries.length > 0;
+    grid.innerHTML = `
+      <div class="empty">
+        <h3>👈 Generate your first leads</h3>
+        <p style="max-width:520px;margin:8px auto;">
+          Left sidebar mein <strong>Country, City</strong> aur <strong>Category</strong> select karo,
+          phir <strong>⚡ Generate Leads</strong> click karo.<br><br>
+          Apify Google Maps se fresh <strong>no-website businesses</strong> scrape karega — 3-5 minutes lagenge.
+        </p>
+        ${hasSaved ? `<p style="margin-top:16px;font-size:13px;">Ya niche <strong>"Past Searches"</strong> se koi cached query click karo (instant, free).</p>` : ""}
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div> Loading leads...</div>';
+
+  const datasetParam = "datasetIds=" + STATE.activeDatasets.map(d => d.datasetId).join(",");
+
+  try {
+    const url = "/api/leads?" + datasetParam + "&limit=200&sort=" + STATE.sort;
+    const r = await fetch(url);
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.error || "Failed to load");
+    }
+    const data = await r.json();
+    STATE.allLeads = data.leads;
+    applyClientFilters();
+
+    // update stats
+    document.getElementById("statTotal").textContent = data.total;
+    document.getElementById("statSource").textContent = `${STATE.activeDatasets.length} dataset${STATE.activeDatasets.length > 1 ? "s" : ""}`;
+
+    // also load /api/stats for avg rating
+    loadStats(datasetParam);
+  } catch (err) {
+    grid.innerHTML = `<div class="empty"><h3>Could not load leads</h3><p>${err.message}</p></div>`;
+  }
+}
+
+async function loadStats(datasetParam) {
+  try {
+    const r = await fetch("/api/stats?" + datasetParam);
+    if (!r.ok) return;
+    const data = await r.json();
+    document.getElementById("statRating").textContent = data.avgRating || "—";
+  } catch (e) {}
+}
+
+// ===== Client-side filtering on already-loaded leads =====
+function applyClientFilters() {
+  const f = STATE.filters;
+  let list = STATE.allLeads.slice();
+  if (parseFloat(f.minRating) > 0) list = list.filter(l => l.rating >= f.minRating);
+  if (parseInt(f.minReviews) > 0) list = list.filter(l => l.reviews >= f.minReviews);
+  if (f.hasPhone) list = list.filter(l => !!l.phone);
+  if (f.hasEmail) list = list.filter(l => !!l.email);
+  STATE.filteredLeads = list;
+  renderLeads();
+}
+
+function renderLeads() {
+  const grid = document.getElementById("leadGrid");
+  grid.innerHTML = "";
+
+  // sort
+  const list = STATE.filteredLeads.slice();
+  if (STATE.sort === "rating") list.sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+  else if (STATE.sort === "reviews") list.sort((a, b) => b.reviews - a.reviews);
+
+  document.getElementById("resultsCount").textContent = list.length;
+  document.getElementById("statFiltered").textContent = list.length;
+  document.getElementById("statUnlocked").textContent = Object.keys(STATE.unlocked).length;
+  document.getElementById("activeQueryLabel").textContent = STATE.activeQueryLabel || "";
+
+  if (list.length === 0) {
+    if (STATE.allLeads.length === 0) {
+      grid.innerHTML = '<div class="empty"><h3>No leads yet</h3><p>Pick Country, City, and Category on the left, then click <strong>Generate Leads</strong> to scrape from Apify.</p></div>';
+    } else {
+      grid.innerHTML = '<div class="empty"><h3>No leads match your filters</h3><p>Try lowering rating or reviews requirements.</p></div>';
+    }
+    return;
+  }
+
+  list.forEach(L => {
+    const isUnlocked = !!STATE.unlocked[L.id];
+    const card = document.createElement("div");
+    card.className = "lead-card" + (isUnlocked ? " unlocked" : "");
+    card.innerHTML = `
+      <div class="lead-name">${escapeHtml(L.name)}</div>
+      <div class="lead-niche">${escapeHtml(L.niche)} • ${escapeHtml(L.city || "—")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</div>
+      <div class="lead-meta">
+        ${L.rating > 0 ? `<span class="badge rating">⭐ ${L.rating.toFixed(1)}</span>` : ""}
+        ${L.reviews > 0 ? `<span class="badge reviews">${L.reviews} reviews</span>` : ""}
+        <span class="badge no-site">No website</span>
+        ${L.photos > 0 ? `<span class="badge">${L.photos} photos</span>` : ""}
+      </div>
+      <div class="contact-row ${isUnlocked ? "" : "locked"}">
+        <div class="contact-line"><strong>📍</strong> <span>${escapeHtml(L.address || "—")}</span></div>
+        <div class="contact-line"><strong>📞</strong> <span>${escapeHtml(L.phone || "—")}</span></div>
+        <div class="contact-line"><strong>✉️</strong> <span>${escapeHtml(L.email || "—")}</span></div>
+      </div>
+      ${!isUnlocked ? '<div class="lock-overlay">🔒 Unlock to reveal</div>' : ""}
+      <div class="lead-actions">
+        ${isUnlocked
+          ? `<button class="btn btn-secondary" onclick="openDetail('${L.id}')">View details</button>`
+          : `<button class="btn btn-primary" onclick="unlockLead('${L.id}')">🔓 Unlock — ${L.cost} credit${L.cost > 1 ? "s" : ""}</button>`}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById("creditDisplay").textContent = STATE.credits;
+  document.getElementById("myLeadsCount").textContent = Object.keys(STATE.unlocked).length;
+}
+
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ===== Past queries (chips) =====
+function renderSavedQueries() {
+  const area = document.getElementById("savedQueriesArea");
+  const wrap = document.getElementById("savedQueries");
+  if (STATE.savedQueries.length === 0) { area.style.display = "none"; return; }
+  area.style.display = "block";
+  wrap.innerHTML = STATE.savedQueries.map((q, i) => `
+    <button class="query-chip" onclick="loadCached(${i})" title="${escapeHtml(q.query)} — ${q.leadCount} leads, ${timeAgo(q.scrapedAt)}">
+      ${escapeHtml(q.query.length > 28 ? q.query.slice(0, 26) + "…" : q.query)}
+      <span class="x" onclick="event.stopPropagation();removeCached(${i})">×</span>
+    </button>
+  `).join("");
+}
+
+function loadCached(i) {
+  const q = STATE.savedQueries[i];
+  STATE.activeDatasets = [q];
+  STATE.activeQueryLabel = `(${q.query})`;
+  loadLeads();
+  toast(`Loading cached "${q.query}"`);
+}
+
+function removeCached(i) {
+  STATE.savedQueries.splice(i, 1);
+  save();
+  renderSavedQueries();
+}
+
+function timeAgo(ts) {
+  const m = Math.floor((Date.now() - ts) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  if (m < 1440) return `${Math.floor(m / 60)} hr ago`;
+  return `${Math.floor(m / 1440)} day ago`;
+}
+
+// ===== Unlock =====
+function unlockLead(leadId) {
+  const L = STATE.allLeads.find(x => x.id === leadId);
+  if (!L) return;
+  if (STATE.unlocked[leadId]) { toast("Already unlocked", "danger"); return; }
+  if (STATE.credits < L.cost) {
+    toast("Not enough credits", "danger");
+    openModal("pricing");
+    return;
+  }
+  STATE.credits -= L.cost;
+  STATE.unlocked[leadId] = {
+    leadSnapshot: L, status: "cold", notes: "",
+    unlockedAt: new Date().toISOString(), cost: L.cost,
+  };
+  logHistory(`Unlocked ${L.name}`, -L.cost);
+  save();
+  renderLeads();
+  toast(`✓ Unlocked! ${L.cost} credit deducted.`);
+  setTimeout(() => openDetail(leadId), 300);
+}
+
+function buyCredits(qty, price, bonus = 0) {
+  STATE.credits += qty + bonus;
+  logHistory(`Bought ${qty} credits${bonus ? ` (+${bonus} bonus)` : ""} for $${price}`, qty + bonus);
+  save();
+  closeModal("pricing");
+  renderLeads();
+  toast(`✓ ${qty + bonus} credits added!`);
+}
+
+function openDetail(leadId) {
+  const U = STATE.unlocked[leadId];
+  if (!U) return;
+  const L = U.leadSnapshot;
+  const el = document.getElementById("detailContent");
+  el.innerHTML = `
+    <button class="modal-close" onclick="closeModal('detail')">×</button>
+    <h2>${escapeHtml(L.name)}</h2>
+    <p class="sub">${escapeHtml(L.niche)} • ${escapeHtml(L.city || "")} • Unlocked ${new Date(U.unlockedAt).toLocaleDateString()}</p>
+    <div class="lead-meta" style="margin-bottom:14px;">
+      ${L.rating > 0 ? `<span class="badge rating">⭐ ${L.rating.toFixed(1)}</span>` : ""}
+      ${L.reviews > 0 ? `<span class="badge reviews">${L.reviews} reviews</span>` : ""}
+      <span class="badge no-site">No website</span>
+    </div>
+    <div class="detail-grid">
+      <div><label>Address</label><div class="val">${escapeHtml(L.address || "—")}</div></div>
+      <div><label>Phone</label><div class="val">${escapeHtml(L.phone || "—")}</div></div>
+      <div><label>Email</label><div class="val">${escapeHtml(L.email || "—")}</div></div>
+      <div><label>Hours</label><div class="val">${escapeHtml(L.hours || "—")}</div></div>
+      ${L.gmb_url ? `<div><label>GMB Profile</label><div class="val"><a href="${L.gmb_url}" target="_blank" style="color:var(--accent);">Open in Maps ↗</a></div></div>` : ""}
+      ${L.gmb_place_id ? `<div><label>Place ID</label><div class="val" style="font-family:monospace;font-size:11px;">${escapeHtml(L.gmb_place_id)}</div></div>` : ""}
+    </div>
+    <div style="margin:18px 0;">
+      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:600;display:block;margin-bottom:6px;">Status</label>
+      <select id="statusSel" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;" onchange="updateStatus('${L.id}', this.value)">
+        <option value="cold" ${U.status === "cold" ? "selected" : ""}>❄️ Cold</option>
+        <option value="contacted" ${U.status === "contacted" ? "selected" : ""}>📨 Contacted</option>
+        <option value="replied" ${U.status === "replied" ? "selected" : ""}>💬 Replied</option>
+        <option value="closed" ${U.status === "closed" ? "selected" : ""}>✅ Closed (won)</option>
+      </select>
+    </div>
+    <div style="margin:14px 0;">
+      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:600;display:block;margin-bottom:6px;">Notes</label>
+      <textarea id="notesTxt" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">${escapeHtml(U.notes || "")}</textarea>
+      <button class="btn btn-secondary" style="margin-top:8px;max-width:140px;" onclick="saveNotes('${L.id}')">Save notes</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;border-top:1px solid var(--border);padding-top:16px;">
+      <button class="btn btn-primary" onclick="copyContact('${L.id}')">📋 Copy contact</button>
+      <button class="btn btn-ghost" onclick="reportBad('${L.id}')">⚠ Report bad lead</button>
+    </div>
+  `;
+  openModal("detail");
+}
+
+function updateStatus(id, status) { STATE.unlocked[id].status = status; save(); renderMyLeads(); }
+function saveNotes(id) {
+  STATE.unlocked[id].notes = document.getElementById("notesTxt").value;
+  save(); toast("✓ Notes saved");
+}
+function copyContact(id) {
+  const L = STATE.unlocked[id].leadSnapshot;
+  const txt = `${L.name}\n${L.address || ""}\n${L.phone || ""}\n${L.email || ""}`;
+  navigator.clipboard.writeText(txt).then(() => toast("✓ Copied"));
+}
+function reportBad(id) {
+  if (!confirm("Report as bad lead? Credit will be refunded.")) return;
+  STATE.credits += STATE.unlocked[id].cost || 1;
+  logHistory(`Refunded: bad lead`, STATE.unlocked[id].cost || 1);
+  delete STATE.unlocked[id];
+  save();
+  renderLeads(); renderMyLeads(); closeModal("detail");
+  toast("✓ Refund issued");
+}
+
+function renderMyLeads() {
+  const wrap = document.getElementById("myLeadsView");
+  const ids = Object.keys(STATE.unlocked);
+  if (ids.length === 0) {
+    wrap.innerHTML = '<div class="empty"><h3>No leads yet</h3><p>Unlock leads from Explore — they appear here forever.</p></div>';
+    return;
+  }
+  const rows = ids.map(id => {
+    const U = STATE.unlocked[id];
+    const L = U.leadSnapshot;
+    return `<tr>
+      <td><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:12px;color:var(--muted);">${escapeHtml(L.niche)}</span></td>
+      <td>${escapeHtml(L.city || "")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</td>
+      <td>${escapeHtml(L.phone || "—")}</td>
+      <td>${escapeHtml(L.email || "—")}</td>
+      <td><span class="status-pill status-${U.status}">${U.status}</span></td>
+      <td><button class="btn btn-secondary" style="max-width:90px;" onclick="openDetail('${L.id}')">Open</button></td>
+    </tr>`;
+  }).join("");
+  wrap.innerHTML = `<table class="saved-table"><thead><tr><th>Business</th><th>Location</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderHistory() {
+  const tbody = document.getElementById("historyBody");
+  if (STATE.history.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px;">No transactions yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = STATE.history.map(h => `
+    <tr>
+      <td style="font-size:12px;color:var(--muted);">${h.date}</td>
+      <td>${escapeHtml(h.action)}</td>
+      <td style="font-weight:600;color:${h.delta > 0 ? "var(--success)" : "var(--danger)"}">${h.delta > 0 ? "+" : ""}${h.delta}</td>
+      <td>${h.balance}</td>
+    </tr>
+  `).join("");
+}
+
+function exportCSV() {
+  const ids = Object.keys(STATE.unlocked);
+  if (!ids.length) { toast("No leads to export", "danger"); return; }
+  const rows = [["Name", "Niche", "City", "Country", "Address", "Phone", "Email", "Rating", "Reviews", "GMB URL", "Status", "Notes"]];
+  ids.forEach(id => {
+    const U = STATE.unlocked[id];
+    const L = U.leadSnapshot;
+    rows.push([L.name, L.niche, L.city || "", L.countryName || "", L.address || "", L.phone || "", L.email || "", L.rating, L.reviews, L.gmb_url || "", U.status, (U.notes || "").replace(/\n/g, " ")]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `leadforge_export_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`✓ Exported ${ids.length} leads`);
+}
+
+function openModal(name) { document.getElementById("modal-" + name).classList.add("active"); }
+function closeModal(name) { document.getElementById("modal-" + name).classList.remove("active"); }
+document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("active"); }));
+
+document.querySelectorAll(".nav-tab").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById("tab-" + b.dataset.tab).classList.add("active");
+    if (b.dataset.tab === "my-leads") renderMyLeads();
+    if (b.dataset.tab === "history") renderHistory();
+  });
+});
+
+function toast(msg, type = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + type;
+  setTimeout(() => t.className = "toast " + type, 2800);
+}
+
+// Filter bindings
+document.getElementById("fRating").addEventListener("input", e => {
+  STATE.filters.minRating = parseFloat(e.target.value);
+  document.getElementById("ratingVal").textContent = e.target.value;
+});
+document.getElementById("fReviews").addEventListener("input", e => {
+  STATE.filters.minReviews = parseInt(e.target.value);
+  document.getElementById("reviewsVal").textContent = e.target.value;
+});
+document.getElementById("fHasPhone").addEventListener("change", e => { STATE.filters.hasPhone = e.target.checked; });
+document.getElementById("fHasEmail").addEventListener("change", e => { STATE.filters.hasEmail = e.target.checked; });
+
+function resetFilters() {
+  document.getElementById("fCountry").value = "";
+  document.getElementById("fCity").value = "";
+  document.getElementById("fNiche").value = "";
+  document.getElementById("fRating").value = 0;
+  document.getElementById("ratingVal").textContent = "0.0";
+  document.getElementById("fReviews").value = 0;
+  document.getElementById("reviewsVal").textContent = "0";
+  document.getElementById("fHasPhone").checked = false;
+  document.getElementById("fHasEmail").checked = false;
+  STATE.filters = { country: "", city: "", niche: "", count: 100, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false };
+  applyClientFilters();
+}
+
+// ===== INIT =====
+(async () => {
+  populateFilters();
+
+  // Show user email in nav
+  if (window.LF_USER) {
+    document.getElementById("userEmail").textContent = window.LF_USER.email || "";
+  }
+
+  document.getElementById("creditDisplay").textContent = STATE.credits;
+  document.getElementById("myLeadsCount").textContent = Object.keys(STATE.unlocked).length;
+  document.getElementById("statUnlocked").textContent = Object.keys(STATE.unlocked).length;
+
+  renderSavedQueries();
+
+  // Resume polling if there was a pending run
+  if (STATE.pendingRun) {
+    showProgressBanner();
+    startPolling();
+  }
+
+  // DON'T auto-load anything on page refresh.
+  // User must explicitly:
+  //   1. Click "⚡ Generate Leads" for a fresh Apify scrape, OR
+  //   2. Click a "Past Searches" chip to load a previously scraped dataset
+  STATE.activeDatasets = [];
+  STATE.activeQueryLabel = "";
+  await loadLeads();  // will render empty state
+})();
+</script>
+</body>
+</html>

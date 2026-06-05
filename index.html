@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LeadForge — Find No-Website Local Businesses on Google Maps</title>
+<meta name="description" content="LeadForge pulls verified GMB profiles of real local businesses with no website. Filter by city, niche & rating. Pay only for the leads you unlock." />
+<style>
+  :root {
+    --primary: #1F4E79; --accent: #2E75B6; --light: #DEEBF6;
+    --bg: #F7F9FC; --card: #FFFFFF; --text: #1F1F1F; --muted: #6B7280;
+    --border: #E5E7EB; --success: #16A34A; --warning: #F59E0B;
+    --danger: #DC2626; --gold: #B7791F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== Navbar ===== */
+  .nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .logo { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color 0.15s; }
+  .nav-links a:hover { color: var(--primary); }
+  .nav-right { display: flex; gap: 10px; align-items: center; }
+  .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-ghost { background: transparent; color: var(--text); }
+  .btn-ghost:hover { background: #F3F4F6; }
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; box-shadow: 0 2px 8px rgba(31, 78, 121, 0.25); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(31, 78, 121, 0.35); }
+  .btn-secondary { background: white; color: var(--primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); background: var(--light); }
+  .btn-lg { padding: 14px 28px; font-size: 15px; }
+
+  /* ===== Container ===== */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+  /* ===== Hero ===== */
+  .hero { padding: 80px 32px 60px; text-align: center; background: linear-gradient(180deg, #F7F9FC 0%, white 100%); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--light); color: var(--primary);
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 24px;
+    border: 1px solid #C7DEEF;
+  }
+  .hero h1 { font-size: 56px; line-height: 1.1; font-weight: 800; color: var(--text); margin-bottom: 20px; max-width: 880px; margin-left: auto; margin-right: auto; letter-spacing: -1.5px; }
+  .hero h1 .accent { color: var(--accent); }
+  .hero h1 .danger { color: var(--danger); }
+  .hero p.subhead { font-size: 19px; color: var(--muted); max-width: 720px; margin: 0 auto 36px; line-height: 1.5; }
+  .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .trust { margin-top: 28px; font-size: 13px; color: var(--muted); }
+  .trust strong { color: var(--text); }
+
+  @media (max-width: 700px) { .hero h1 { font-size: 36px; } .hero p.subhead { font-size: 17px; } }
+
+  /* ===== Hero preview card ===== */
+  .preview {
+    margin: 50px auto 0; max-width: 880px; background: white; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(31, 78, 121, 0.15), 0 4px 20px rgba(0,0,0,0.04);
+    overflow: hidden; border: 1px solid var(--border);
+  }
+  .preview-top { background: #F3F4F6; padding: 12px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .preview-dot { width: 12px; height: 12px; border-radius: 50%; background: #FF5F57; }
+  .preview-dot:nth-child(2) { background: #FFBD2E; }
+  .preview-dot:nth-child(3) { background: #28C840; }
+  .preview-url { margin-left: 12px; font-family: monospace; font-size: 12px; color: var(--muted); background: white; padding: 4px 12px; border-radius: 6px; }
+  .preview-body { padding: 24px; }
+  .preview-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+  .filter-chip { background: #F3F4F6; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--text); }
+  .filter-chip.active { background: var(--light); color: var(--primary); }
+  .preview-count { margin-left: auto; font-size: 12px; color: var(--success); font-weight: 700; }
+  .preview-leads { display: flex; flex-direction: column; gap: 10px; }
+  .preview-lead { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #FAFAFA; border-radius: 10px; gap: 12px; }
+  .preview-lead-left { flex: 1; text-align: left; }
+  .preview-lead-name { font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+  .preview-lead-meta { font-size: 12px; color: var(--muted); }
+  .preview-lead-meta .no-web { background: #FEE2E2; color: var(--danger); padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 6px; font-size: 11px; }
+  .preview-unlock { background: var(--primary); color: white; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+
+  /* ===== Stats ===== */
+  .stats { padding: 50px 0; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
+  @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; } }
+  .stat-num { font-size: 42px; font-weight: 800; color: var(--primary); letter-spacing: -1px; }
+  .stat-label { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* ===== Sections ===== */
+  section { padding: 70px 0; }
+  .section-tag { color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; text-align: center; margin-bottom: 14px; }
+  .section-title { font-size: 38px; font-weight: 800; color: var(--text); text-align: center; max-width: 760px; margin: 0 auto 50px; letter-spacing: -0.8px; line-height: 1.2; }
+  @media (max-width: 700px) { .section-title { font-size: 28px; } }
+
+  /* ===== Features ===== */
+  .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+  .feature-card { background: white; padding: 28px 24px; border-radius: 14px; border: 1px solid var(--border); transition: all 0.2s; }
+  .feature-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(31, 78, 121, 0.08); }
+  .feature-icon { width: 44px; height: 44px; background: var(--light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px; }
+  .feature-card h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .feature-card p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+  /* ===== How it works ===== */
+  .how { background: white; }
+  .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .steps-grid { grid-template-columns: 1fr; } }
+  .step { text-align: center; padding: 20px; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border-radius: 50%; font-weight: 800; font-size: 22px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(31, 78, 121, 0.3); }
+  .step h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .step p { color: var(--muted); font-size: 14px; }
+
+  /* ===== Pricing ===== */
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; max-width: 1180px; margin: 0 auto; }
+  @media (max-width: 1000px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .price-card { background: white; border: 2px solid var(--border); border-radius: 16px; padding: 28px 24px; position: relative; transition: all 0.2s; }
+  .price-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .price-card.popular { border-color: var(--accent); background: linear-gradient(180deg, var(--light) 0%, white 30%); }
+  .price-card.popular::before { content: "⭐ MOST POPULAR"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+  .price-name { font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .price-tag { font-size: 14px; color: var(--muted); margin: 4px 0 14px; }
+  .price-amount { font-size: 44px; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 6px; letter-spacing: -1px; }
+  .price-amount .small { font-size: 16px; color: var(--muted); font-weight: 500; }
+  .price-credits { color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+  .price-features { list-style: none; margin-bottom: 24px; }
+  .price-features li { padding: 6px 0; font-size: 14px; color: var(--text); display: flex; align-items: start; gap: 8px; }
+  .price-features li::before { content: "✓"; color: var(--success); font-weight: 800; flex-shrink: 0; }
+  .price-cta { width: 100%; }
+  .price-note { text-align: center; color: var(--muted); font-size: 13px; margin-top: 30px; }
+
+  /* ===== Testimonials ===== */
+  .testimonials { background: white; }
+  .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 900px) { .test-grid { grid-template-columns: 1fr; } }
+  .test-card { background: var(--bg); padding: 26px; border-radius: 14px; border: 1px solid var(--border); }
+  .test-quote { color: var(--text); font-size: 15px; line-height: 1.6; margin-bottom: 18px; font-style: italic; }
+  .test-author { display: flex; align-items: center; gap: 10px; }
+  .test-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .test-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .test-role { color: var(--muted); font-size: 12px; }
+
+  /* ===== FAQ ===== */
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { background: white; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .faq-q { padding: 18px 22px; cursor: pointer; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+  .faq-q:hover { background: var(--bg); }
+  .faq-q .chevron { transition: transform 0.2s; font-size: 20px; color: var(--muted); }
+  .faq-item.open .chevron { transform: rotate(180deg); }
+  .faq-a { padding: 0 22px 18px; color: var(--muted); font-size: 14px; line-height: 1.6; display: none; }
+  .faq-item.open .faq-a { display: block; }
+
+  /* ===== Final CTA ===== */
+  .final-cta { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; text-align: center; padding: 70px 32px; }
+  .final-cta h2 { font-size: 36px; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.8px; }
+  .final-cta p { font-size: 16px; opacity: 0.92; margin-bottom: 28px; }
+  .final-cta .btn { background: white; color: var(--primary); }
+  .final-cta .btn:hover { transform: translateY(-2px); }
+
+  /* ===== Footer ===== */
+  footer { background: #0B2540; color: rgba(255,255,255,0.7); padding: 50px 32px 30px; text-align: center; }
+  .footer-logo { font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
+  .footer-tagline { font-size: 14px; margin-bottom: 22px; }
+  .footer-links { display: flex; gap: 26px; justify-content: center; margin-bottom: 28px; font-size: 14px; flex-wrap: wrap; }
+  .footer-links a:hover { color: white; }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.4); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">Lead<span>Forge</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-right">
+    <a href="/login" class="btn btn-ghost">Log In</a>
+    <a href="/signup" class="btn btn-primary">Get Started Free →</a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container">
+    <div class="badge">⚡ GMB-Powered Lead Generation Tool</div>
+    <h1>Find <span class="danger">No-Website</span> Businesses. <span class="accent">Close Deals.</span></h1>
+    <p class="subhead">LeadForge pulls verified GMB profiles of real local businesses with no website. Filter by city, niche & rating. Pay only for the leads you unlock.</p>
+    <div class="hero-ctas">
+      <a href="/signup" class="btn btn-primary btn-lg">Start Free — No Credit Card</a>
+      <a href="#how" class="btn btn-secondary btn-lg">See How It Works</a>
+    </div>
+    <div class="trust">Trusted by <strong>500+ freelancers & agencies</strong></div>
+
+    <!-- Preview card -->
+    <div class="preview">
+      <div class="preview-top">
+        <div class="preview-dot"></div><div class="preview-dot"></div><div class="preview-dot"></div>
+        <div class="preview-url">app.leadforge.io/dashboard</div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-filters">
+          <span class="filter-chip active">Austin, TX</span>
+          <span class="filter-chip active">Restaurants</span>
+          <span class="filter-chip">⭐ 4.0+</span>
+          <span class="preview-count">128 live leads</span>
+        </div>
+        <div class="preview-leads">
+          <div class="preview-lead">
+            <div class="preview-lead-left">
+              <div class="preview-lead-name">Mario's Pizzeria</div>
+              <div class="preview-lead-meta">Restaurant · ⭐ 4.7 · 312 reviews · Austin, TX <span class="no-web">No website</span></div>
+            </div>
+            <div class="preview-unlock">Unlock — 1 credit</div>
+          </div>
+          <div class="preview-lead">
+            <div class="preview-lead-left">
+              <div class="preview-lead-name">Bright Smile Dental</div>
+              <div class="preview-lead-meta">Dentist · ⭐ 4.9 · 184 reviews · Miami, FL <span class="no-web">No website</span></div>
+            </div>
+            <div class="preview-unlock">Unlock — 2 credits</div>
+          </div>
+          <div class="preview-lead">
+            <div class="preview-lead-left">
+              <div class="preview-lead-name">Hometown HVAC Co.</div>
+              <div class="preview-lead-meta">HVAC Contractor · ⭐ 4.6 · 97 reviews · Denver, CO <span class="no-web">No website</span></div>
+            </div>
+            <div class="preview-unlock">Unlock — 1 credit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div><div class="stat-num">10,000+</div><div class="stat-label">Live Leads</div></div>
+      <div><div class="stat-num">500+</div><div class="stat-label">Cities Covered</div></div>
+      <div><div class="stat-num">4.8★</div><div class="stat-label">Avg User Rating</div></div>
+      <div><div class="stat-num">Pay-Per-Unlock</div><div class="stat-label">Pricing Model</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section id="features">
+  <div class="container">
+    <div class="section-tag">Features</div>
+    <h2 class="section-title">Everything you need to land website clients faster</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Smart GMB Discovery</h3>
+        <p>Filter businesses by city, niche, rating & review count. Only see businesses with no website.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💎</div>
+        <h3>Pay-Per-Unlock Credits</h3>
+        <p>Buy credits and only pay when you unlock a lead's contact details. No wasted spend.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Lead History & Tracking</h3>
+        <p>Save unlocked leads forever. Track your contacted and converted prospects easily.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Live Data from Apify</h3>
+        <p>Leads are pulled live from Google Maps via Apify crawler. Always fresh, never stale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how" class="how">
+  <div class="container">
+    <div class="section-tag">How It Works</div>
+    <h2 class="section-title">From search to pitch in minutes</h2>
+    <div class="steps-grid">
+      <div class="step"><div class="step-num">01</div><h3>Set Your Filters</h3><p>Choose country, city, niche, min rating, min reviews.</p></div>
+      <div class="step"><div class="step-num">02</div><h3>Browse Live Leads</h3><p>See real GMB businesses with no website, pulled live from Apify.</p></div>
+      <div class="step"><div class="step-num">03</div><h3>Unlock Contact Details</h3><p>Use credits to reveal phone, email & address.</p></div>
+      <div class="step"><div class="step-num">04</div><h3>Pitch & Close</h3><p>Reach out and offer to build their website. Track status in CRM.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-title">Simple, credit-based pricing</h2>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-tag">Best for solo freelancers</div>
+        <div class="price-amount">$19<span class="small">/one-time</span></div>
+        <div class="price-credits">20 credits · $0.95 per lead</div>
+        <ul class="price-features">
+          <li>20 lead unlocks</li>
+          <li>All filters & countries</li>
+          <li>Lead history</li>
+          <li>Email support</li>
+        </ul>
+        <a href="/signup" class="btn btn-secondary price-cta">Get Starter</a>
+      </div>
+      <div class="price-card popular">
+        <div class="price-name">Pro</div>
+        <div class="price-tag">Best for active freelancers</div>
+        <div class="price-amount">$79<span class="small">/one-time</span></div>
+        <div class="price-credits">100 credits + 5 bonus · $0.79 per lead</div>
+        <ul class="price-features">
+          <li>100 lead unlocks + 5 bonus</li>
+          <li>All filters & countries</li>
+          <li>Lead history & tags</li>
+          <li>Priority email support</li>
+          <li>CSV export</li>
+        </ul>
+        <a href="/signup" class="btn btn-primary price-cta">Get Pro</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Agency</div>
+        <div class="price-tag">Best for small agencies</div>
+        <div class="price-amount">$299<span class="small">/one-time</span></div>
+        <div class="price-credits">500 credits + 50 bonus · $0.60 per lead</div>
+        <ul class="price-features">
+          <li>500 lead unlocks + 50 bonus</li>
+          <li>All filters & countries</li>
+          <li>Priority support</li>
+          <li>CSV + CRM export</li>
+          <li>API access</li>
+        </ul>
+        <a href="/signup" class="btn btn-secondary price-cta">Get Agency</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Scale</div>
+        <div class="price-tag">Best for teams</div>
+        <div class="price-amount">$899<span class="small">/one-time</span></div>
+        <div class="price-credits">2,000 credits + 200 bonus · $0.45 per lead</div>
+        <ul class="price-features">
+          <li>2,000 lead unlocks + 200 bonus</li>
+          <li>All filters & countries</li>
+          <li>Dedicated account manager</li>
+          <li>Team seats (5)</li>
+          <li>White-label CSV export</li>
+        </ul>
+        <a href="/signup" class="btn btn-secondary price-cta">Get Scale</a>
+      </div>
+    </div>
+    <p class="price-note">1 credit = 1 lead unlock. Credits never expire. No subscription.</p>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-tag">Wall of Love</div>
+    <h2 class="section-title">Loved by freelancers worldwide</h2>
+    <div class="test-grid">
+      <div class="test-card">
+        <p class="test-quote">"I found 12 restaurant leads in my city in under 10 minutes. Already closed 2 of them."</p>
+        <div class="test-author">
+          <div class="test-avatar">SK</div>
+          <div><div class="test-name">Sarah K.</div><div class="test-role">Freelance Designer</div></div>
+        </div>
+      </div>
+      <div class="test-card">
+        <p class="test-quote">"The no-website filter is gold. These businesses literally need what I'm selling."</p>
+        <div class="test-author">
+          <div class="test-avatar">JR</div>
+          <div><div class="test-name">James R.</div><div class="test-role">Web Agency Owner</div></div>
+        </div>
+      </div>
+      <div class="test-card">
+        <p class="test-quote">"Finally a tool built for web designers who do outreach. Credits model is super fair."</p>
+        <div class="test-author">
+          <div class="test-avatar">PM</div>
+          <div><div class="test-name">Priya M.</div><div class="test-role">Freelance Developer</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section id="faq">
+  <div class="container">
+    <div class="section-tag">FAQ</div>
+    <h2 class="section-title">Frequently asked questions</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Where does the lead data come from?<span class="chevron">⌄</span></div>
+        <div class="faq-a">All leads are pulled live from Google My Business (GMB) profiles via Apify's Google Maps Scraper. The data is real, verified, and refreshed on every search.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What does "No website" mean exactly?<span class="chevron">⌄</span></div>
+        <div class="faq-a">A business is marked "No website" when their GMB profile doesn't have a website link. These businesses are perfect prospects for web designers and agencies offering web development services.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do credits expire?<span class="chevron">⌄</span></div>
+        <div class="faq-a">No. Credits never expire. You can buy them once and use them whenever you want.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I filter by country and city?<span class="chevron">⌄</span></div>
+        <div class="faq-a">Yes. LeadForge supports 50+ countries and unlimited cities. You can filter by category, rating, review count, and more.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is there a free trial?<span class="chevron">⌄</span></div>
+        <div class="faq-a">Yes! When you sign up, you get 10 free credits to test the platform. No credit card required.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I get a refund for bad leads?<span class="chevron">⌄</span></div>
+        <div class="faq-a">Yes. If a lead's phone and email both turn out invalid, we'll refund your credit automatically. Quality is guaranteed.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final-cta">
+  <h2>Ready to find your next website client?</h2>
+  <p>Start free today. No credit card required.</p>
+  <a href="/signup" class="btn btn-lg">Get Started Free →</a>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-logo">LeadForge</div>
+  <div class="footer-tagline">Find. Unlock. Pitch. Close.</div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="/login">Login</a>
+    <a href="mailto:hello@leadforge.io">Contact</a>
+  </div>
+  <div class="footer-copy">© 2026 LeadForge. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
