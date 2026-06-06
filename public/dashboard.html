@@ -92,11 +92,20 @@
   .credit-pill { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 7px; border: none; transition: all 0.15s; box-shadow: var(--shadow-sm); }
   .credit-pill:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .credit-pill svg { width: 14px; height: 14px; }
-  .user-menu { display: flex; align-items: center; gap: 8px; padding-left: 12px; margin-left: 4px; border-left: 1px solid var(--gray-200); }
-  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
-  .user-email { font-size: 12px; color: var(--gray-600); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-icon-text { background: transparent; border: 1px solid var(--gray-200); color: var(--gray-600); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; }
-  .btn-icon-text:hover { background: var(--gray-50); border-color: var(--gray-300); color: var(--gray-900); }
+  .user-menu { display: flex; align-items: center; gap: 6px; padding-left: 12px; margin-left: 4px; border-left: 1px solid var(--gray-200); position: relative; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; border: none; transition: all 0.15s; }
+  .user-avatar:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
+  .user-dropdown { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12); padding: 6px; min-width: 240px; z-index: 60; animation: dropDown 0.15s ease-out; }
+  .user-dropdown.open { display: block; }
+  @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .user-dropdown-info { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); margin-bottom: 4px; }
+  .user-dropdown-info .label { font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }
+  .user-dropdown-info .val { font-size: 13px; color: var(--gray-900); font-weight: 500; word-break: break-all; }
+  .user-dropdown-action { width: 100%; padding: 9px 12px; background: transparent; border: none; text-align: left; font-size: 13px; color: var(--gray-700); cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 9px; font-weight: 500; font-family: inherit; }
+  .user-dropdown-action:hover { background: var(--gray-50); color: var(--gray-900); }
+  .user-dropdown-action svg { width: 14px; height: 14px; color: var(--gray-500); }
+  .user-dropdown-action.danger:hover { background: var(--danger-soft); color: var(--danger); }
+  .user-dropdown-action.danger:hover svg { color: var(--danger); }
 
   /* ===== Layout ===== */
   .layout-wrap { max-width: 1440px; margin: 0 auto; padding: 24px; }
@@ -325,10 +334,9 @@
     .tab-label { display: none; }
     .tab .badge-count { padding: 0 5px; font-size: 10px; min-width: 16px; text-align: center; }
     .nav-right { gap: 6px; flex-shrink: 0; }
-    .user-email { display: none; }
-    .user-menu .btn-icon-text { display: none; }
     .user-menu { padding-left: 6px; margin-left: 0; gap: 0; border-left-color: var(--gray-100); }
-    .user-avatar { width: 30px; height: 30px; font-size: 13px; }
+    .user-avatar { width: 32px; height: 32px; font-size: 13px; }
+    .user-dropdown { right: -8px; min-width: 220px; }
     .credit-pill { padding: 6px 11px; font-size: 12px; gap: 5px; }
     .credit-pill svg { width: 12px; height: 12px; }
     .layout-wrap { padding: 14px; }
@@ -465,9 +473,25 @@
       <span class="credit-num" id="creditDisplay">10</span> credits
     </button>
     <div class="user-menu">
-      <div class="user-avatar" id="userAvatar">U</div>
-      <span class="user-email" id="userEmail"></span>
-      <button class="btn-icon-text" onclick="lfLogout()">Sign out</button>
+      <button class="user-avatar" id="userAvatar" onclick="toggleUserMenu(event)" title="Account">U</button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-info">
+          <div class="label">Signed in as</div>
+          <div class="val" id="userEmail">—</div>
+        </div>
+        <a href="/dashboard" class="user-dropdown-action" onclick="document.getElementById('userDropdown').classList.remove('open');">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l5-5 5 5"/><path d="M8 3v10"/></svg>
+          Dashboard
+        </a>
+        <button class="user-dropdown-action" onclick="window.open('/admin','_blank')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1l6 3v4c0 4-3 6-6 7-3-1-6-3-6-7V4z"/></svg>
+          Admin panel
+        </button>
+        <button class="user-dropdown-action danger" onclick="lfLogout()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4V2H3v12h7v-2"/><path d="M7 8h7m-3-3l3 3-3 3"/></svg>
+          Sign out
+        </button>
+      </div>
     </div>
   </div>
 </nav>
@@ -1400,6 +1424,20 @@ function exportCSV() {
 function openModal(name) { document.getElementById("modal-" + name).classList.add("active"); }
 function closeModal(name) { document.getElementById("modal-" + name).classList.remove("active"); }
 document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("active"); }));
+
+// User dropdown menu (avatar click)
+function toggleUserMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById("userDropdown").classList.toggle("open");
+}
+// Close dropdown when clicking outside
+document.addEventListener("click", e => {
+  const dd = document.getElementById("userDropdown");
+  const menu = document.querySelector(".user-menu");
+  if (dd && menu && !menu.contains(e.target)) {
+    dd.classList.remove("open");
+  }
+});
 
 function switchTab(tabName, save = true) {
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
