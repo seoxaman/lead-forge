@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>LeadForge Dashboard</title>
+<title>Dashboard — LeadForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ===== SUPABASE CONFIG =====
@@ -11,17 +14,13 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ===== AUTH GUARD — redirects to /login if not signed in =====
+  // ===== AUTH GUARD =====
   (async () => {
     try {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        window.location.href = "/login?redirect=/dashboard";
-        return;
-      }
+      if (!session) { window.location.href = "/login?redirect=/dashboard"; return; }
       window.LF_USER = session.user;
     } catch (err) {
-      console.error("Auth check failed:", err);
       window.location.href = "/login";
     }
   })();
@@ -33,296 +32,450 @@
 </script>
 <style>
   :root {
-    --primary: #1F4E79; --accent: #2E75B6; --light: #DEEBF6;
-    --bg: #F7F9FC; --card: #FFFFFF; --text: #1F1F1F; --muted: #6B7280;
-    --border: #E5E7EB; --success: #16A34A; --warning: #F59E0B;
-    --danger: #DC2626; --gold: #B7791F;
+    /* Brand */
+    --brand: #1F4E79;
+    --brand-2: #2E75B6;
+    --brand-soft: #EFF6FC;
+    --brand-tint: #DEEBF6;
+
+    /* Semantic */
+    --success: #10B981;
+    --success-soft: #D1FAE5;
+    --warning: #F59E0B;
+    --warning-soft: #FEF3C7;
+    --danger: #EF4444;
+    --danger-soft: #FEE2E2;
+
+    /* Neutrals (slate scale) */
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+
+    /* Layout */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+    --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; }
+  html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: var(--gray-50); color: var(--gray-900); line-height: 1.5; min-height: 100vh; font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; }
+  button, input, select, textarea { font-family: inherit; }
 
-  .nav { background: white; border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-  .logo { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
-  .logo span { color: var(--accent); }
-  .nav-right { display: flex; align-items: center; gap: 12px; }
-  .credit-pill { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 8px 18px; border-radius: 24px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px rgba(31, 78, 121, 0.25); border: none; }
-  .credit-pill:hover { transform: translateY(-1px); transition: transform 0.15s; }
-  .nav-tab { background: none; border: none; padding: 8px 14px; cursor: pointer; font-size: 14px; color: var(--muted); font-weight: 500; border-radius: 6px; }
-  .nav-tab.active { color: var(--primary); background: var(--light); }
-  .nav-tab:hover:not(.active) { background: #F3F4F6; }
-  .live-tag { background: var(--success); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 700; letter-spacing: 0.5px; margin-left: 8px; }
+  /* ===== Top navbar ===== */
+  .nav { background: white; border-bottom: 1px solid var(--gray-200); height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .nav-left { display: flex; align-items: center; gap: 32px; }
+  .logo { font-size: 20px; font-weight: 800; color: var(--brand); letter-spacing: -0.5px; display: flex; align-items: center; gap: 4px; }
+  .logo span { color: var(--brand-2); }
+  .live-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; box-shadow: 0 0 0 3px var(--success-soft); animation: pulse 2s infinite; margin-left: 6px; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .tabs { display: flex; gap: 4px; }
+  .tab { background: transparent; border: none; padding: 7px 14px; font-size: 14px; font-weight: 500; color: var(--gray-500); border-radius: 7px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--gray-900); background: var(--gray-100); }
+  .tab.active { color: var(--brand); background: var(--brand-soft); }
+  .tab .badge-count { background: var(--gray-200); color: var(--gray-700); padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .tab.active .badge-count { background: var(--brand); color: white; }
 
-  .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .credit-pill { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; padding: 7px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 7px; border: none; transition: all 0.15s; box-shadow: var(--shadow-sm); }
+  .credit-pill:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .credit-pill svg { width: 14px; height: 14px; }
+  .user-menu { display: flex; align-items: center; gap: 8px; padding-left: 12px; margin-left: 4px; border-left: 1px solid var(--gray-200); }
+  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; }
+  .user-email { font-size: 12px; color: var(--gray-600); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-icon-text { background: transparent; border: 1px solid var(--gray-200); color: var(--gray-600); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; }
+  .btn-icon-text:hover { background: var(--gray-50); border-color: var(--gray-300); color: var(--gray-900); }
 
-  .hero { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 28px 32px; border-radius: 16px; margin-bottom: 24px; }
-  .hero h1 { font-size: 24px; margin-bottom: 6px; }
-  .hero p { opacity: 0.9; font-size: 14px; max-width: 720px; }
+  /* ===== Layout ===== */
+  .layout-wrap { max-width: 1440px; margin: 0 auto; padding: 24px; }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-  @media (max-width: 800px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
-  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); margin-top: 6px; }
-  .stat-sub { font-size: 12px; color: var(--success); margin-top: 4px; font-weight: 500; }
+  /* ===== Page header ===== */
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+  .page-title { font-size: 24px; font-weight: 700; color: var(--gray-900); letter-spacing: -0.5px; margin-bottom: 4px; }
+  .page-subtitle { font-size: 14px; color: var(--gray-500); }
 
-  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
-  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+  /* ===== Stats ===== */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 18px; transition: all 0.15s; }
+  .stat-card:hover { border-color: var(--gray-300); box-shadow: var(--shadow); }
+  .stat-icon { width: 32px; height: 32px; background: var(--brand-soft); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; color: var(--brand-2); }
+  .stat-icon svg { width: 16px; height: 16px; }
+  .stat-icon.success { background: var(--success-soft); color: var(--success); }
+  .stat-icon.warn { background: var(--warning-soft); color: var(--warning); }
+  .stat-icon.danger { background: var(--danger-soft); color: var(--danger); }
+  .stat-label { font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--gray-900); letter-spacing: -0.5px; margin-top: 4px; line-height: 1.1; }
+  .stat-sub { font-size: 11px; color: var(--gray-500); margin-top: 4px; font-weight: 500; }
 
-  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; height: fit-content; position: sticky; top: 88px; }
-  .filters h3 { font-size: 14px; color: var(--primary); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
-  .filter-group { margin-bottom: 16px; }
-  .filter-group label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
-  .filter-group select, .filter-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; color: var(--text); font-family: inherit; }
-  .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.15); }
-  .filter-group input[type="range"] { padding: 0; accent-color: var(--accent); }
-  .range-value { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); margin-top: 6px; cursor: pointer; }
-  .reset-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-  .reset-btn:hover { background: var(--light); color: var(--primary); border-color: var(--accent); }
-  .filter-divider { height: 1px; background: var(--border); margin: 16px 0; }
+  /* ===== Main layout ===== */
+  .main-grid { display: grid; grid-template-columns: 296px 1fr; gap: 20px; }
+  @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
 
-  .generate-btn {
-    width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 15px;
-    cursor: pointer; box-shadow: 0 4px 14px rgba(31, 78, 121, 0.3);
-    transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(31, 78, 121, 0.4); }
-  .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  /* ===== Sidebar / Filters ===== */
+  .sidebar { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; height: fit-content; position: sticky; top: 88px; box-shadow: var(--shadow-sm); }
+  .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100); margin-bottom: 16px; }
+  .sidebar-title { font-size: 14px; font-weight: 700; color: var(--gray-900); display: flex; align-items: center; gap: 7px; }
+  .reset-btn { background: transparent; border: 1px solid var(--gray-200); color: var(--gray-500); padding: 4px 10px; border-radius: var(--radius-sm); font-size: 11px; cursor: pointer; font-weight: 500; transition: all 0.15s; }
+  .reset-btn:hover { background: var(--gray-50); color: var(--gray-700); border-color: var(--gray-300); }
 
-  .browse-btn {
-    width: 100%; padding: 10px; background: white; color: var(--primary);
-    border: 1px solid var(--border); border-radius: 8px; font-weight: 600; font-size: 13px;
-    cursor: pointer; margin-top: 8px;
-  }
-  .browse-btn:hover { background: var(--light); border-color: var(--accent); }
+  .field { margin-bottom: 14px; }
+  .field-label { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gray-700); margin-bottom: 6px; font-weight: 600; }
+  .field-label .req { color: var(--danger); margin-left: 1px; }
+  .field-label .meta { color: var(--gray-500); font-weight: 500; margin-left: auto; font-size: 11px; }
+  .input, .select { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; background: white; color: var(--gray-900); transition: all 0.15s; }
+  .input::placeholder { color: var(--gray-400); }
+  .input:focus, .select:focus { outline: none; border-color: var(--brand-2); box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.12); }
+  .select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
 
-  .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-  .results-count { font-size: 14px; color: var(--muted); }
-  .results-count strong { color: var(--primary); }
-  .sort { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: white; font-size: 13px; }
+  .range-input { padding: 0; accent-color: var(--brand-2); }
+  .range-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); padding: 6px 0; cursor: pointer; }
+  .checkbox-row input { width: 14px; height: 14px; accent-color: var(--brand-2); cursor: pointer; }
 
-  .lead-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-  .lead-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: all 0.15s; position: relative; }
-  .lead-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(31, 78, 121, 0.08); }
-  .lead-card.unlocked { border-color: var(--success); background: linear-gradient(180deg, #F0FDF4 0%, white 30%); }
-  .lead-card.unlocked::before { content: "✓ Unlocked"; position: absolute; top: 12px; right: 12px; background: var(--success); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-  .lead-card.pending { border-color: var(--warning); background: linear-gradient(180deg, #FFFBEB 0%, white 30%); }
-  .lead-card.pending::before { content: "⏳ Under review"; position: absolute; top: 12px; right: 12px; background: var(--warning); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .hint { font-size: 11px; color: var(--gray-500); margin-top: 6px; line-height: 1.5; }
 
-  .lead-name { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; padding-right: 60px; }
-  .lead-niche { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 10px; }
-  .lead-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .badge { background: #F3F4F6; padding: 3px 10px; border-radius: 12px; font-size: 12px; color: var(--text); }
-  .badge.rating { background: #FEF3C7; color: var(--gold); font-weight: 600; }
-  .badge.reviews { background: var(--light); color: var(--primary); }
-  .badge.no-site { background: #FEE2E2; color: var(--danger); font-weight: 600; }
+  .btn-primary { width: 100%; padding: 11px 16px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; border: none; border-radius: 9px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 2px 8px rgba(31, 78, 121, 0.2); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(31, 78, 121, 0.3); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-primary svg { width: 14px; height: 14px; }
 
-  .contact-row { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; padding: 10px; background: #FAFAFA; border-radius: 8px; font-size: 13px; position: relative; }
-  .contact-row.locked { filter: blur(4px); user-select: none; pointer-events: none; }
-  .lock-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(31, 78, 121, 0.04); border-radius: 8px; pointer-events: none; color: var(--primary); font-weight: 600; font-size: 13px; gap: 6px; }
-  .contact-line { display: flex; gap: 6px; }
-  .contact-line strong { color: var(--muted); min-width: 22px; }
+  .divider { height: 1px; background: var(--gray-100); margin: 16px 0; }
+
+  /* Past searches */
+  .past-search-area { margin-top: 16px; }
+  .past-search-label { font-size: 11px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--gray-100); color: var(--gray-700); padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+  .chip:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand-tint); }
+  .chip .x { color: var(--gray-400); padding-left: 2px; transition: color 0.15s; }
+  .chip .x:hover { color: var(--danger); }
+
+  /* ===== Results area ===== */
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .results-meta { font-size: 13px; color: var(--gray-500); }
+  .results-meta strong { color: var(--gray-900); font-weight: 700; }
+  .results-meta .query-label { color: var(--brand-2); font-weight: 600; margin-left: 6px; }
+  .select-sm { padding: 6px 30px 6px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); background: white; font-size: 12px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; color: var(--gray-700); font-weight: 500; }
+
+  /* ===== Lead cards ===== */
+  .lead-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .lead-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 18px; transition: all 0.15s; position: relative; }
+  .lead-card:hover { border-color: var(--gray-300); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .lead-card.unlocked { border-color: var(--success); background: linear-gradient(180deg, #F0FDF4 0%, white 40%); }
+  .lead-card.unlocked .status-tag { background: var(--success); }
+  .lead-card.pending { border-color: var(--warning); background: linear-gradient(180deg, #FFFBEB 0%, white 40%); }
+  .lead-card.pending .status-tag { background: var(--warning); }
+  .status-tag { display: none; position: absolute; top: 14px; right: 14px; color: white; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; }
+  .lead-card.unlocked .status-tag, .lead-card.pending .status-tag { display: block; }
+  .lead-card.unlocked .status-tag::before { content: "✓ Unlocked"; }
+  .lead-card.pending .status-tag::before { content: "⏳ Under Review"; }
+
+  .lead-name { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 3px; padding-right: 80px; line-height: 1.3; }
+  .lead-context { font-size: 12px; color: var(--gray-500); margin-bottom: 12px; font-weight: 500; }
+  .lead-context .niche { color: var(--brand-2); font-weight: 600; }
+  .lead-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .badge { background: var(--gray-100); padding: 3px 9px; border-radius: 12px; font-size: 11px; color: var(--gray-700); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .badge.rating { background: #FEF3C7; color: #92400E; }
+  .badge.reviews { background: var(--brand-soft); color: var(--brand); }
+  .badge.no-web { background: var(--danger-soft); color: var(--danger); }
+
+  .contact { padding: 10px 12px; background: var(--gray-50); border-radius: 8px; margin: 12px 0; position: relative; font-size: 12px; }
+  .contact.locked { filter: blur(4px); user-select: none; pointer-events: none; }
+  .contact-line { display: flex; align-items: flex-start; gap: 8px; padding: 2px 0; color: var(--gray-700); }
+  .contact-line svg { width: 12px; height: 12px; color: var(--gray-400); margin-top: 3px; flex-shrink: 0; }
   .contact-line span { word-break: break-word; flex: 1; }
+  .lock-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(31, 78, 121, 0.02); border-radius: 8px; pointer-events: none; color: var(--brand); font-weight: 600; font-size: 12px; gap: 6px; }
 
-  .lead-actions { display: flex; gap: 8px; margin-top: 8px; }
-  .btn { border: none; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.12s; }
-  .btn-primary { background: var(--primary); color: white; }
-  .btn-primary:hover { background: #163C5E; }
-  .btn-secondary { background: white; color: var(--primary); border: 1px solid var(--border); }
-  .btn-secondary:hover { background: var(--light); border-color: var(--accent); }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .pending-banner { margin: 10px 0; padding: 8px 12px; background: var(--warning-soft); border-radius: 7px; font-size: 11px; color: #92400E; text-align: center; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
-  .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .lead-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .btn { border: none; padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.12s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-solid { background: var(--brand); color: white; }
+  .btn-solid:hover { background: #163C5E; }
+  .btn-outline { background: white; color: var(--brand); border: 1px solid var(--gray-200); }
+  .btn-outline:hover { background: var(--brand-soft); border-color: var(--brand-tint); }
+  .btn-ghost { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-200); }
+  .btn-ghost:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+  /* ===== Modals ===== */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; animation: fadeIn 0.15s ease-out; }
   .modal-bg.active { display: flex; }
-  .modal { background: white; border-radius: 14px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-  .modal h2 { color: var(--primary); margin-bottom: 6px; font-size: 22px; }
-  .modal .sub { color: var(--muted); margin-bottom: 22px; font-size: 14px; }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--muted); }
-  .modal-close:hover { background: #E5E7EB; color: var(--text); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal { background: white; border-radius: var(--radius-lg); max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: slideUp 0.2s ease-out; }
+  @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal h2 { color: var(--gray-900); margin-bottom: 4px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+  .modal .sub { color: var(--gray-500); margin-bottom: 20px; font-size: 13px; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: var(--gray-100); border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 16px; color: var(--gray-500); transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: var(--gray-200); color: var(--gray-900); }
 
-  .price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  /* Pricing modal */
+  .price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   @media (max-width: 600px) { .price-grid { grid-template-columns: 1fr; } }
-  .price-card { border: 2px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.15s; position: relative; }
-  .price-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .price-card.popular { border-color: var(--accent); background: linear-gradient(180deg, var(--light) 0%, white 50%); }
-  .price-card.popular::before { content: "MOST POPULAR"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 3px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
-  .price-name { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-  .price-amount { font-size: 32px; font-weight: 800; color: var(--primary); margin: 6px 0; }
-  .price-credits { color: var(--accent); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
-  .price-effective { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-  .price-bonus { font-size: 12px; color: var(--success); font-weight: 600; }
+  .price-card { border: 2px solid var(--gray-200); border-radius: var(--radius-lg); padding: 18px; cursor: pointer; transition: all 0.15s; position: relative; }
+  .price-card:hover { border-color: var(--brand-2); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .price-card.popular { border-color: var(--brand-2); background: linear-gradient(180deg, var(--brand-soft) 0%, white 50%); }
+  .price-card.popular::before { content: "MOST POPULAR"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: white; padding: 3px 12px; border-radius: 12px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; }
+  .price-name { font-size: 12px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .price-amount { font-size: 28px; font-weight: 800; color: var(--gray-900); margin: 6px 0; letter-spacing: -1px; }
+  .price-credits { color: var(--brand-2); font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+  .price-effective { font-size: 11px; color: var(--gray-500); margin-bottom: 10px; }
+  .price-bonus { font-size: 11px; color: var(--success); font-weight: 600; }
 
-  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
-  .detail-grid > div { background: #FAFAFA; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
-  .detail-grid label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
-  .detail-grid .val { font-weight: 600; color: var(--text); word-break: break-word; }
+  /* Detail modal */
+  .detail-section-title { font-size: 11px; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 10px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 500px) { .detail-grid { grid-template-columns: 1fr; } }
+  .detail-cell { background: var(--gray-50); padding: 10px 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--gray-100); }
+  .detail-cell label { display: block; font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; font-weight: 600; }
+  .detail-cell .val { font-weight: 500; color: var(--gray-900); word-break: break-word; }
+  .detail-cell .val a { color: var(--brand-2); font-weight: 600; }
 
+  /* ===== Tab content ===== */
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
-  .empty { background: var(--card); border: 2px dashed var(--border); border-radius: 12px; padding: 60px 20px; text-align: center; color: var(--muted); grid-column: 1/-1; }
-  .empty h3 { color: var(--text); margin-bottom: 8px; }
+  /* ===== Empty state ===== */
+  .empty { background: white; border: 1px dashed var(--gray-300); border-radius: var(--radius-lg); padding: 60px 24px; text-align: center; color: var(--gray-500); grid-column: 1/-1; }
+  .empty-icon { width: 56px; height: 56px; background: var(--brand-soft); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--brand-2); }
+  .empty-icon svg { width: 24px; height: 24px; }
+  .empty h3 { color: var(--gray-900); margin-bottom: 8px; font-size: 18px; font-weight: 700; }
+  .empty p { font-size: 14px; max-width: 480px; margin: 0 auto; line-height: 1.6; }
 
-  .saved-table { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; border-collapse: collapse; overflow: hidden; }
-  .saved-table th { background: var(--light); color: var(--primary); padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  .saved-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .saved-table tr:last-child td { border-bottom: none; }
-  .saved-table tr:hover td { background: #FAFAFA; }
-  .status-pill { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
-  .status-cold { background: #F3F4F6; color: var(--muted); }
-  .status-contacted { background: var(--light); color: var(--primary); }
-  .status-replied { background: #FEF3C7; color: var(--gold); }
-  .status-closed { background: #D1FAE5; color: var(--success); }
+  /* ===== Tables ===== */
+  .table-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--gray-50); color: var(--gray-700); padding: 12px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); font-weight: 700; }
+  tbody td { padding: 14px; border-bottom: 1px solid var(--gray-100); font-size: 13px; vertical-align: top; color: var(--gray-700); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--gray-50); }
+  .status-pill { padding: 2px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
+  .status-cold { background: var(--gray-100); color: var(--gray-600); }
+  .status-contacted { background: var(--brand-soft); color: var(--brand); }
+  .status-replied { background: var(--warning-soft); color: #92400E; }
+  .status-closed { background: var(--success-soft); color: #065F46; }
 
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: white; padding: 14px 22px; border-radius: 10px; box-shadow: 0 8px 24px rgba(22, 163, 74, 0.35); font-weight: 600; transform: translateY(140%); transition: transform 0.25s; z-index: 200; }
+  /* ===== Toast ===== */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: white; padding: 12px 18px; border-radius: var(--radius); box-shadow: var(--shadow-lg); font-weight: 600; font-size: 13px; transform: translateY(140%); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; max-width: 360px; display: flex; align-items: center; gap: 8px; }
   .toast.show { transform: translateY(0); }
-  .toast.danger { background: var(--danger); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.35); }
+  .toast.danger { background: var(--danger); }
+  .toast.success { background: var(--success); }
 
-  .loading { display: flex; justify-content: center; align-items: center; padding: 60px; color: var(--muted); gap: 12px; }
-  .spinner { width: 20px; height: 20px; border: 3px solid var(--light); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  /* ===== Loading & Error ===== */
+  .loading-state { display: flex; justify-content: center; align-items: center; padding: 60px; color: var(--gray-500); gap: 10px; font-size: 14px; grid-column: 1/-1; }
+  .spinner { width: 18px; height: 18px; border: 2.5px solid var(--gray-200); border-top-color: var(--brand-2); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .error-banner { background: #FEE2E2; border: 1px solid var(--danger); color: var(--danger); padding: 14px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+  .error-banner { background: var(--danger-soft); border: 1px solid var(--danger); color: var(--danger); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 
-  /* Progress banner for scraping */
-  .progress-banner {
-    background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
-    border: 1px solid var(--warning);
-    border-radius: 12px; padding: 18px 22px; margin-bottom: 20px;
-    display: flex; align-items: center; gap: 16px; position: relative;
-  }
-  .progress-banner .icon {
-    width: 40px; height: 40px; border: 4px solid #FDE68A; border-top-color: var(--warning);
-    border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0;
-  }
-  .progress-banner .body { flex: 1; }
-  .progress-banner .body strong { color: #92400E; display: block; margin-bottom: 4px; font-size: 15px; }
-  .progress-banner .body small { color: #78350F; font-size: 13px; }
-  .progress-banner .timer { font-family: monospace; background: white; padding: 6px 12px; border-radius: 6px; color: var(--warning); font-weight: 700; font-size: 14px; }
-  .progress-banner .cancel-x {
-    background: white; border: 1px solid var(--warning); color: var(--warning);
-    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px;
-  }
+  /* ===== Progress banner ===== */
+  .progress-banner { background: linear-gradient(135deg, #FFFBEB, #FEF3C7); border: 1px solid var(--warning); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
+  .progress-icon { width: 36px; height: 36px; border: 3px solid #FDE68A; border-top-color: var(--warning); border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0; }
+  .progress-body { flex: 1; }
+  .progress-body strong { color: #92400E; display: block; margin-bottom: 2px; font-size: 14px; font-weight: 600; }
+  .progress-body small { color: #78350F; font-size: 12px; }
+  .progress-timer { font-family: 'SF Mono', Menlo, monospace; background: white; padding: 5px 12px; border-radius: 6px; color: var(--warning); font-weight: 700; font-size: 13px; }
+  .progress-cancel { background: white; border: 1px solid var(--warning); color: var(--warning); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .progress-cancel:hover { background: var(--warning); color: white; }
 
-  /* Cached query chip */
-  .saved-queries { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .query-chip {
-    background: var(--light); color: var(--primary); padding: 4px 10px;
-    border-radius: 12px; font-size: 12px; cursor: pointer; border: none;
-    display: flex; align-items: center; gap: 6px;
+  /* ===== Page header — explore tab ===== */
+  .welcome-card { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); color: white; border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .welcome-card::after { content: ""; position: absolute; right: -40px; top: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); border-radius: 50%; }
+  .welcome-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.4px; }
+  .welcome-card p { font-size: 14px; opacity: 0.92; max-width: 580px; line-height: 1.5; }
+  .welcome-card .actions { display: flex; gap: 10px; margin-top: 14px; }
+  .welcome-card .actions a { background: white; color: var(--brand); padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
+  .welcome-card .actions a:hover { transform: translateY(-1px); }
+
+  /* ===== Inline status text ===== */
+  .credit-num { font-variant-numeric: tabular-nums; }
+
+  /* Mobile menu */
+  @media (max-width: 700px) {
+    .nav { padding: 0 16px; }
+    .nav-left { gap: 16px; }
+    .tabs { display: none; }
+    .user-email { display: none; }
+    .layout-wrap { padding: 16px; }
   }
-  .query-chip:hover { background: #C7DEEF; }
-  .query-chip .x { color: var(--danger); font-weight: 700; padding-left: 4px; }
 
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <div class="logo">Lead<span>Forge</span><span class="live-tag">LIVE</span></div>
+  <div class="nav-left">
+    <div class="logo">Lead<span>Forge</span><span class="live-dot" title="Live"></span></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="explore">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M14 14l-3-3"/></svg>
+        Explore
+      </button>
+      <button class="tab" data-tab="my-leads">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+        My Leads <span class="badge-count" id="myLeadsCount">0</span>
+      </button>
+      <button class="tab" data-tab="history">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>
+        History
+      </button>
+    </div>
+  </div>
   <div class="nav-right">
-    <button class="nav-tab active" data-tab="explore">Explore</button>
-    <button class="nav-tab" data-tab="my-leads">My Leads (<span id="myLeadsCount">0</span>)</button>
-    <button class="nav-tab" data-tab="history">History</button>
     <button class="credit-pill" onclick="openModal('pricing')">
-      <span>💎</span><span id="creditDisplay">10</span> credits
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 5h5l-4 3 2 5-5-3-5 3 2-5-4-3h5z"/></svg>
+      <span class="credit-num" id="creditDisplay">10</span> credits
     </button>
-    <div style="display:flex;align-items:center;gap:6px;border-left:1px solid var(--border);padding-left:12px;margin-left:4px;">
-      <span id="userEmail" style="font-size:13px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-      <button onclick="lfLogout()" title="Sign out" style="background:#F3F4F6;border:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">Sign out</button>
+    <div class="user-menu">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <span class="user-email" id="userEmail"></span>
+      <button class="btn-icon-text" onclick="lfLogout()">Sign out</button>
     </div>
   </div>
 </nav>
 
-<div class="container">
+<div class="layout-wrap">
 
   <!-- ===== EXPLORE TAB ===== -->
   <div id="tab-explore" class="tab-content active">
-    <div class="hero">
-      <h1>🔍 Generate leads on-demand from any location</h1>
-      <p>Pick a country, city, and category. Apify scrapes Google Maps live and shows verified businesses without websites. Each scrape takes 5–10 minutes and the results are cached forever.</p>
+
+    <div class="welcome-card">
+      <h2>Generate fresh leads from any location</h2>
+      <p>Pick a country, city, and category. Apify scrapes Google Maps live and shows verified businesses without websites. Each scrape takes 3–6 minutes and the results are cached.</p>
     </div>
 
     <div id="errorBanner"></div>
     <div id="progressBanner"></div>
 
     <div class="stats-grid">
-      <div class="stat"><div class="stat-label">Current Leads</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub" id="statSource">loading...</div></div>
-      <div class="stat"><div class="stat-label">Matching Filters</div><div class="stat-value" id="statFiltered">—</div><div class="stat-sub">on screen</div></div>
-      <div class="stat"><div class="stat-label">Avg Rating</div><div class="stat-value" id="statRating">—</div><div class="stat-sub">⭐ quality</div></div>
-      <div class="stat"><div class="stat-label">Your Unlocked</div><div class="stat-value" id="statUnlocked">0</div><div class="stat-sub">saved forever</div></div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h2l3-9 4 18 3-9h4"/></svg></div>
+        <div class="stat-label">Current Leads</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub" id="statSource">no search yet</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="stat-label">Matching</div>
+        <div class="stat-value" id="statFiltered">—</div>
+        <div class="stat-sub">on screen</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warn"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"/></svg></div>
+        <div class="stat-label">Avg Rating</div>
+        <div class="stat-value" id="statRating">—</div>
+        <div class="stat-sub">quality score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div>
+        <div class="stat-label">Your Unlocked</div>
+        <div class="stat-value" id="statUnlocked">0</div>
+        <div class="stat-sub">saved forever</div>
+      </div>
     </div>
 
-    <div class="layout">
-      <aside class="filters">
-        <h3>Generate Leads <button class="reset-btn" onclick="resetFilters()">Reset</button></h3>
+    <div class="main-grid">
+      <!-- Sidebar / Filters -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h12M5 8h6M7 12h2"/></svg>
+            Generate Leads
+          </div>
+          <button class="reset-btn" onclick="resetFilters()">Reset</button>
+        </div>
 
-        <div class="filter-group">
-          <label>Country *</label>
-          <select id="fCountry"></select>
+        <div class="field">
+          <div class="field-label">Country <span class="req">*</span></div>
+          <select class="select" id="fCountry"></select>
         </div>
-        <div class="filter-group">
-          <label>City *</label>
-          <input type="text" id="fCity" placeholder="e.g., Mumbai, Austin, London" />
+
+        <div class="field">
+          <div class="field-label">City <span class="req">*</span></div>
+          <input type="text" class="input" id="fCity" placeholder="e.g., Mumbai, Austin" />
         </div>
-        <div class="filter-group">
-          <label>Category / Niche *</label>
-          <select id="fNiche"></select>
+
+        <div class="field">
+          <div class="field-label">Category <span class="req">*</span></div>
+          <select class="select" id="fNiche"></select>
         </div>
-        <div class="filter-group">
-          <label>No-website leads target</label>
-          <select id="fCount">
-            <option value="10" selected>10 leads (scrapes ~30, ~$0.24)</option>
-            <option value="25">25 leads (scrapes ~75, ~$0.60)</option>
-            <option value="50">50 leads (scrapes ~150, ~$1.20)</option>
-            <option value="100">100 leads (scrapes ~300, ~$2.40)</option>
+
+        <div class="field">
+          <div class="field-label">No-website target</div>
+          <select class="select" id="fCount">
+            <option value="10" selected>10 leads · ~3 min · ~$0.24</option>
+            <option value="25">25 leads · ~7 min · ~$0.60</option>
+            <option value="50">50 leads · ~13 min · ~$1.20</option>
+            <option value="100">100 leads · ~25 min · ~$2.40</option>
           </select>
-          <small style="display:block;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.4;">
-            Apify ko 3x scrape karna padta hai because most GMB businesses have websites. Yeh number 100% no-website leads ka hai.
-          </small>
+          <div class="hint">Apify scrapes 3x to filter out websites. This count is guaranteed no-website leads.</div>
         </div>
 
-        <button class="generate-btn" id="generateBtn" onclick="generateLeads()">
-          <span>⚡</span> Generate Leads
+        <button class="btn-primary" id="generateBtn" onclick="generateLeads()">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l1.5 6L16 8l-6.5 2L8 16l-1.5-6L0 8l6.5-2z"/></svg>
+          Generate Leads
         </button>
 
-        <div class="filter-divider"></div>
+        <div class="divider"></div>
 
-        <div class="filter-group">
-          <label>Min Rating: <span id="ratingVal">0.0</span> ⭐</label>
-          <input type="range" id="fRating" min="0" max="5" step="0.1" value="0">
-          <div class="range-value"><span>0</span><span>5</span></div>
-        </div>
-        <div class="filter-group">
-          <label>Min Reviews: <span id="reviewsVal">0</span></label>
-          <input type="range" id="fReviews" min="0" max="500" step="5" value="0">
-          <div class="range-value"><span>0</span><span>500+</span></div>
-        </div>
-        <div class="filter-group">
-          <label class="checkbox-row"><input type="checkbox" id="fHasPhone"> Has phone</label>
-          <label class="checkbox-row"><input type="checkbox" id="fHasEmail"> Has email</label>
+        <div class="field">
+          <div class="field-label">
+            Min Rating
+            <span class="meta"><span id="ratingVal">0.0</span> ⭐</span>
+          </div>
+          <input type="range" class="range-input" id="fRating" min="0" max="5" step="0.1" value="0">
+          <div class="range-meta"><span>0</span><span>5</span></div>
         </div>
 
-        <button class="browse-btn" onclick="applyClientFilters()">Apply Client Filters</button>
+        <div class="field">
+          <div class="field-label">
+            Min Reviews
+            <span class="meta" id="reviewsVal">0</span>
+          </div>
+          <input type="range" class="range-input" id="fReviews" min="0" max="500" step="5" value="0">
+          <div class="range-meta"><span>0</span><span>500+</span></div>
+        </div>
 
-        <div id="savedQueriesArea" style="margin-top:18px;display:none;">
-          <label style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">Past Searches (cached)</label>
-          <div class="saved-queries" id="savedQueries"></div>
+        <div class="field">
+          <label class="checkbox-row"><input type="checkbox" id="fHasPhone"> Has phone number</label>
+          <label class="checkbox-row"><input type="checkbox" id="fHasEmail"> Has email address</label>
+        </div>
+
+        <div class="past-search-area" id="savedQueriesArea" style="display:none;">
+          <div class="past-search-label">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2 2"/></svg>
+            Past Searches
+          </div>
+          <div class="chips" id="savedQueries"></div>
         </div>
       </aside>
 
+      <!-- Main results -->
       <main>
         <div class="results-header">
-          <div class="results-count">Showing <strong id="resultsCount">—</strong> leads <span id="activeQueryLabel" style="color:var(--accent);font-weight:600;"></span></div>
-          <select class="sort" id="sortBy" onchange="renderLeads()">
+          <div class="results-meta">
+            Showing <strong id="resultsCount">—</strong> leads
+            <span class="query-label" id="activeQueryLabel"></span>
+          </div>
+          <select class="select-sm" id="sortBy" onchange="renderLeads()">
             <option value="rating">Sort: Highest rated</option>
             <option value="reviews">Sort: Most reviewed</option>
             <option value="recent">Sort: Recently added</option>
           </select>
         </div>
         <div id="leadGrid" class="lead-grid">
-          <div class="loading"><div class="spinner"></div> Loading leads...</div>
+          <div class="loading-state"><div class="spinner"></div> Loading...</div>
         </div>
       </main>
     </div>
@@ -330,20 +483,33 @@
 
   <!-- ===== MY LEADS TAB ===== -->
   <div id="tab-my-leads" class="tab-content">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-      <div><h2 style="color:var(--primary);">My Unlocked Leads</h2><p style="color:var(--muted);font-size:14px;">Your private list — saved forever in your browser.</p></div>
-      <button class="btn btn-primary" style="max-width:180px;" onclick="exportCSV()">⬇ Export CSV</button>
+    <div class="page-header">
+      <div>
+        <div class="page-title">My Unlocked Leads</div>
+        <div class="page-subtitle">Your private list — saved forever in your browser</div>
+      </div>
+      <button class="btn-primary" style="max-width:200px;" onclick="exportCSV()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1v10M4 7l4 4 4-4M2 14h12"/></svg>
+        Export CSV
+      </button>
     </div>
     <div id="myLeadsView"></div>
   </div>
 
   <!-- ===== HISTORY TAB ===== -->
   <div id="tab-history" class="tab-content">
-    <h2 style="color:var(--primary);margin-bottom:18px;">Credit History</h2>
-    <table class="saved-table">
-      <thead><tr><th>Date</th><th>Action</th><th>Credits</th><th>Balance</th></tr></thead>
-      <tbody id="historyBody"></tbody>
-    </table>
+    <div class="page-header">
+      <div>
+        <div class="page-title">Credit History</div>
+        <div class="page-subtitle">All transactions on your account</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Date</th><th>Action</th><th>Change</th><th>Balance</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
   </div>
 
 </div>
@@ -353,57 +519,45 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal('pricing')">×</button>
     <h2>Buy credits</h2>
-    <p class="sub">1 credit = 1 unlocked lead. No subscription. Demo mode — Stripe integration is the next step.</p>
+    <p class="sub">1 credit unlocks 1 lead. Credits never expire. Demo mode — Stripe coming next.</p>
     <div class="price-grid">
-      <div class="price-card" onclick="buyCredits(20, 19)"><div class="price-name">Starter</div><div class="price-amount">$19</div><div class="price-credits">20 credits</div><div class="price-effective">$0.95 per lead</div></div>
-      <div class="price-card popular" onclick="buyCredits(100, 79, 5)"><div class="price-name">Pro</div><div class="price-amount">$79</div><div class="price-credits">100 credits</div><div class="price-effective">$0.79 per lead</div><div class="price-bonus">+ 5 bonus</div></div>
-      <div class="price-card" onclick="buyCredits(500, 299, 50)"><div class="price-name">Agency</div><div class="price-amount">$299</div><div class="price-credits">500 credits</div><div class="price-effective">$0.60 per lead</div><div class="price-bonus">+ 50 bonus</div></div>
-      <div class="price-card" onclick="buyCredits(2000, 899, 200)"><div class="price-name">Scale</div><div class="price-amount">$899</div><div class="price-credits">2,000 credits</div><div class="price-effective">$0.45 per lead</div><div class="price-bonus">+ 200 bonus</div></div>
+      <div class="price-card" onclick="buyCredits(20, 19)"><div class="price-name">Starter</div><div class="price-amount">$19</div><div class="price-credits">20 credits</div><div class="price-effective">$0.95 / lead</div></div>
+      <div class="price-card popular" onclick="buyCredits(100, 79, 5)"><div class="price-name">Pro</div><div class="price-amount">$79</div><div class="price-credits">100 credits</div><div class="price-effective">$0.79 / lead</div><div class="price-bonus">+ 5 bonus</div></div>
+      <div class="price-card" onclick="buyCredits(500, 299, 50)"><div class="price-name">Agency</div><div class="price-amount">$299</div><div class="price-credits">500 credits</div><div class="price-effective">$0.60 / lead</div><div class="price-bonus">+ 50 bonus</div></div>
+      <div class="price-card" onclick="buyCredits(2000, 899, 200)"><div class="price-name">Scale</div><div class="price-amount">$899</div><div class="price-credits">2,000 credits</div><div class="price-effective">$0.45 / lead</div><div class="price-bonus">+ 200 bonus</div></div>
     </div>
   </div>
 </div>
 
 <div class="modal-bg" id="modal-detail"><div class="modal" id="detailContent"></div></div>
 
-<!-- ===== REPORT BAD LEAD MODAL ===== -->
+<!-- ===== REPORT MODAL ===== -->
 <div class="modal-bg" id="modal-report">
   <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeModal('report')">×</button>
-    <h2>⚠ Report bad lead</h2>
+    <h2>Report bad lead</h2>
     <p class="sub">Help us improve quality. Credit will be refunded if admin approves your report (usually within 24 hours).</p>
 
-    <div style="margin:18px 0;">
-      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;display:block;margin-bottom:10px;">Why is this lead bad? (select all that apply)</label>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="phone_invalid"> Phone number doesn't work
-        </label>
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="has_website"> Actually has a website
-        </label>
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="closed"> Business has permanently closed
-        </label>
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="wrong_info"> Wrong business info (address/name)
-        </label>
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="duplicate"> Duplicate of another lead
-        </label>
-        <label class="checkbox-row" style="background:#FAFAFA;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-size:14px;">
-          <input type="checkbox" value="other"> Other (please describe below)
-        </label>
+    <div style="margin:16px 0;">
+      <div class="detail-section-title">Why is this lead bad? (select all that apply)</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="phone_invalid"> Phone number doesn't work</label>
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="has_website"> Actually has a website</label>
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="closed"> Business has permanently closed</label>
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="wrong_info"> Wrong business info (address/name)</label>
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="duplicate"> Duplicate of another lead</label>
+        <label class="checkbox-row" style="background:var(--gray-50);padding:10px 14px;border-radius:8px;border:1px solid var(--gray-200);"><input type="checkbox" value="other"> Other (please describe below)</label>
       </div>
     </div>
 
-    <div style="margin:18px 0;">
-      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:700;display:block;margin-bottom:6px;">Additional notes (optional)</label>
-      <textarea id="reportNotes" rows="3" placeholder="Tell us more about what went wrong..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></textarea>
+    <div style="margin:16px 0;">
+      <div class="detail-section-title">Additional notes (optional)</div>
+      <textarea id="reportNotes" rows="3" placeholder="Tell us more about what went wrong..." style="width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:22px;border-top:1px solid var(--border);padding-top:18px;">
-      <button class="btn btn-secondary" onclick="closeModal('report')" style="flex:1;">Cancel</button>
-      <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()" style="flex:2;background:var(--danger);">Submit for Review</button>
+    <div style="display:flex;gap:10px;margin-top:18px;border-top:1px solid var(--gray-100);padding-top:18px;">
+      <button class="btn btn-ghost" onclick="closeModal('report')" style="flex:1;">Cancel</button>
+      <button class="btn" id="submitReportBtn" onclick="submitReport()" style="flex:2;background:var(--danger);color:white;">Submit for Review</button>
     </div>
   </div>
 </div>
@@ -414,58 +568,19 @@
 // ===== Hardcoded filter lists =====
 const COUNTRIES = [
   ["", "— Select country —"],
-  ["United States", "🇺🇸 United States"],
-  ["Canada", "🇨🇦 Canada"],
-  ["United Kingdom", "🇬🇧 United Kingdom"],
-  ["Australia", "🇦🇺 Australia"],
-  ["India", "🇮🇳 India"],
-  ["United Arab Emirates", "🇦🇪 United Arab Emirates"],
-  ["Saudi Arabia", "🇸🇦 Saudi Arabia"],
-  ["Singapore", "🇸🇬 Singapore"],
-  ["Germany", "🇩🇪 Germany"],
-  ["France", "🇫🇷 France"],
-  ["Spain", "🇪🇸 Spain"],
-  ["Italy", "🇮🇹 Italy"],
-  ["Netherlands", "🇳🇱 Netherlands"],
-  ["Belgium", "🇧🇪 Belgium"],
-  ["Sweden", "🇸🇪 Sweden"],
-  ["Norway", "🇳🇴 Norway"],
-  ["Denmark", "🇩🇰 Denmark"],
-  ["Finland", "🇫🇮 Finland"],
-  ["Ireland", "🇮🇪 Ireland"],
-  ["Switzerland", "🇨🇭 Switzerland"],
-  ["Austria", "🇦🇹 Austria"],
-  ["Portugal", "🇵🇹 Portugal"],
-  ["Poland", "🇵🇱 Poland"],
-  ["New Zealand", "🇳🇿 New Zealand"],
-  ["South Africa", "🇿🇦 South Africa"],
-  ["Brazil", "🇧🇷 Brazil"],
-  ["Mexico", "🇲🇽 Mexico"],
-  ["Argentina", "🇦🇷 Argentina"],
-  ["Chile", "🇨🇱 Chile"],
-  ["Colombia", "🇨🇴 Colombia"],
-  ["Japan", "🇯🇵 Japan"],
-  ["South Korea", "🇰🇷 South Korea"],
-  ["Indonesia", "🇮🇩 Indonesia"],
-  ["Philippines", "🇵🇭 Philippines"],
-  ["Vietnam", "🇻🇳 Vietnam"],
-  ["Thailand", "🇹🇭 Thailand"],
-  ["Malaysia", "🇲🇾 Malaysia"],
-  ["Pakistan", "🇵🇰 Pakistan"],
-  ["Bangladesh", "🇧🇩 Bangladesh"],
-  ["Sri Lanka", "🇱🇰 Sri Lanka"],
-  ["Nepal", "🇳🇵 Nepal"],
-  ["Turkey", "🇹🇷 Turkey"],
-  ["Egypt", "🇪🇬 Egypt"],
-  ["Nigeria", "🇳🇬 Nigeria"],
-  ["Kenya", "🇰🇪 Kenya"],
-  ["Ghana", "🇬🇭 Ghana"],
-  ["Morocco", "🇲🇦 Morocco"],
-  ["Israel", "🇮🇱 Israel"],
-  ["Qatar", "🇶🇦 Qatar"],
-  ["Kuwait", "🇰🇼 Kuwait"],
-  ["Oman", "🇴🇲 Oman"],
-  ["Bahrain", "🇧🇭 Bahrain"],
+  ["United States", "🇺🇸 United States"], ["Canada", "🇨🇦 Canada"], ["United Kingdom", "🇬🇧 United Kingdom"], ["Australia", "🇦🇺 Australia"],
+  ["India", "🇮🇳 India"], ["United Arab Emirates", "🇦🇪 United Arab Emirates"], ["Saudi Arabia", "🇸🇦 Saudi Arabia"], ["Singapore", "🇸🇬 Singapore"],
+  ["Germany", "🇩🇪 Germany"], ["France", "🇫🇷 France"], ["Spain", "🇪🇸 Spain"], ["Italy", "🇮🇹 Italy"],
+  ["Netherlands", "🇳🇱 Netherlands"], ["Belgium", "🇧🇪 Belgium"], ["Sweden", "🇸🇪 Sweden"], ["Norway", "🇳🇴 Norway"],
+  ["Denmark", "🇩🇰 Denmark"], ["Finland", "🇫🇮 Finland"], ["Ireland", "🇮🇪 Ireland"], ["Switzerland", "🇨🇭 Switzerland"],
+  ["Austria", "🇦🇹 Austria"], ["Portugal", "🇵🇹 Portugal"], ["Poland", "🇵🇱 Poland"], ["New Zealand", "🇳🇿 New Zealand"],
+  ["South Africa", "🇿🇦 South Africa"], ["Brazil", "🇧🇷 Brazil"], ["Mexico", "🇲🇽 Mexico"], ["Argentina", "🇦🇷 Argentina"],
+  ["Chile", "🇨🇱 Chile"], ["Colombia", "🇨🇴 Colombia"], ["Japan", "🇯🇵 Japan"], ["South Korea", "🇰🇷 South Korea"],
+  ["Indonesia", "🇮🇩 Indonesia"], ["Philippines", "🇵🇭 Philippines"], ["Vietnam", "🇻🇳 Vietnam"], ["Thailand", "🇹🇭 Thailand"],
+  ["Malaysia", "🇲🇾 Malaysia"], ["Pakistan", "🇵🇰 Pakistan"], ["Bangladesh", "🇧🇩 Bangladesh"], ["Sri Lanka", "🇱🇰 Sri Lanka"],
+  ["Nepal", "🇳🇵 Nepal"], ["Turkey", "🇹🇷 Turkey"], ["Egypt", "🇪🇬 Egypt"], ["Nigeria", "🇳🇬 Nigeria"],
+  ["Kenya", "🇰🇪 Kenya"], ["Ghana", "🇬🇭 Ghana"], ["Morocco", "🇲🇦 Morocco"], ["Israel", "🇮🇱 Israel"],
+  ["Qatar", "🇶🇦 Qatar"], ["Kuwait", "🇰🇼 Kuwait"], ["Oman", "🇴🇲 Oman"], ["Bahrain", "🇧🇭 Bahrain"],
 ];
 
 const NICHES = [
@@ -490,17 +605,16 @@ const NICHES = [
 
 // ===== STATE =====
 const STATE = {
-  // active dataset(s) — IDs we're currently viewing
-  activeDatasets: [],   // array of {datasetId, query, scrapedAt, leadCount}
+  activeDatasets: [],
   activeQueryLabel: "",
-  allLeads: [],         // full unfiltered list from server
-  filteredLeads: [],    // after client-side filters
+  allLeads: [],
+  filteredLeads: [],
   unlocked: JSON.parse(localStorage.getItem("lf_unlocked") || "{}"),
   credits: parseInt(localStorage.getItem("lf_credits") || "10"),
   history: JSON.parse(localStorage.getItem("lf_history") || "[]"),
-  savedQueries: JSON.parse(localStorage.getItem("lf_savedQueries") || "[]"),  // [{query, datasetId, scrapedAt, leadCount}]
-  pendingRun: JSON.parse(localStorage.getItem("lf_pendingRun") || "null"),    // {runId, query, datasetId, startedAt}
-  filters: { country: "", city: "", niche: "", count: 100, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false },
+  savedQueries: JSON.parse(localStorage.getItem("lf_savedQueries") || "[]"),
+  pendingRun: JSON.parse(localStorage.getItem("lf_pendingRun") || "null"),
+  filters: { country: "", city: "", niche: "", count: 10, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false },
   sort: "rating",
 };
 
@@ -517,7 +631,6 @@ function logHistory(action, delta) {
   STATE.history = STATE.history.slice(0, 50);
 }
 
-// ===== Populate dropdowns =====
 function populateFilters() {
   const c = document.getElementById("fCountry");
   c.innerHTML = "";
@@ -526,7 +639,6 @@ function populateFilters() {
     o.value = val; o.textContent = label;
     c.appendChild(o);
   });
-
   const n = document.getElementById("fNiche");
   n.innerHTML = "";
   NICHES.forEach((label, idx) => {
@@ -536,16 +648,13 @@ function populateFilters() {
   });
 }
 
-// ===== Build search query string for Apify =====
 function buildQuery(country, city, niche) {
-  // e.g., "Plumber in Mumbai India"
   const parts = [niche];
   if (city) parts.push("in", city);
   if (country) parts.push(country);
   return parts.filter(Boolean).join(" ").trim();
 }
 
-// ===== Generate Leads =====
 async function generateLeads() {
   const country = document.getElementById("fCountry").value.trim();
   const city = document.getElementById("fCity").value.trim();
@@ -559,85 +668,68 @@ async function generateLeads() {
 
   const query = buildQuery(country, city, niche);
 
-  // Check cache: is there a recent dataset for this exact query?
   const cached = STATE.savedQueries.find(q => q.query.toLowerCase() === query.toLowerCase());
   if (cached) {
-    if (!confirm(`Aapne yeh search 1 baar pehle ki thi (${cached.leadCount} leads found, ${timeAgo(cached.scrapedAt)}).\n\nCached results dikhayein? (instant, free)\n\nOK = Use cache | Cancel = Generate fresh from Apify`)) {
-      // user wants fresh — proceed to scrape
+    if (!confirm(`You searched this query before (${cached.leadCount} leads, ${timeAgo(cached.scrapedAt)}).\n\nUse cached results? (instant, free)\n\nOK = Use cache | Cancel = Generate fresh from Apify`)) {
+      // user wants fresh
     } else {
-      // use cache
       STATE.activeDatasets = [cached];
-      STATE.activeQueryLabel = `(cached: ${query})`;
+      STATE.activeQueryLabel = `· cached: ${query}`;
       await loadLeads();
-      toast(`✓ Showing cached ${cached.leadCount} leads`);
+      toast(`Loaded ${cached.leadCount} cached leads`, "success");
       return;
     }
   }
 
-  // Trigger Apify scrape
-  document.getElementById("generateBtn").disabled = true;
-  document.getElementById("generateBtn").innerHTML = "<span>⏳</span> Starting scrape...";
+  const btn = document.getElementById("generateBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:white;"></div> Starting...';
 
   try {
     const r = await fetch("/api/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        niche: niche,              // WHAT to search (e.g., "Restaurant")
-        city: city,                // WHERE — city (e.g., "Mumbai")
-        country: country,          // WHERE — country (e.g., "India")
-        targetLeads: count,        // user wants this many NO-WEBSITE leads
-        multiplier: 3,             // scrape 3x to compensate for filtering
-      }),
+      body: JSON.stringify({ niche, city, country, targetLeads: count, multiplier: 3 }),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "Failed to start scrape");
 
-    // Save pending run
     STATE.pendingRun = {
-      runId: data.runId,
-      datasetId: data.datasetId,
-      query,
-      country, city, niche, count,
+      runId: data.runId, datasetId: data.datasetId, query, country, city, niche, count,
       startedAt: Date.now(),
     };
     save();
 
     showProgressBanner();
     startPolling();
-    toast(`✓ Scrape started: "${query}"`);
+    toast(`✓ Scrape started: "${query}"`, "success");
   } catch (err) {
     toast("Error: " + err.message, "danger");
   } finally {
-    document.getElementById("generateBtn").disabled = false;
-    document.getElementById("generateBtn").innerHTML = "<span>⚡</span> Generate Leads";
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l1.5 6L16 8l-6.5 2L8 16l-1.5-6L0 8l6.5-2z"/></svg> Generate Leads';
   }
 }
 
-// ===== Polling for Apify run =====
 let pollInterval = null;
 let timerInterval = null;
 
 function showProgressBanner() {
   const p = STATE.pendingRun;
   if (!p) return;
-  const banner = document.getElementById("progressBanner");
-  banner.innerHTML = `
+  document.getElementById("progressBanner").innerHTML = `
     <div class="progress-banner">
-      <div class="icon"></div>
-      <div class="body">
-        <strong>Scraping in progress: "${escapeHtml(p.query)}"</strong>
-        <small>Expected 5–${p.count > 200 ? "20" : "10"} minutes. You can leave this page open or close it — we'll resume when you come back.</small>
+      <div class="progress-icon"></div>
+      <div class="progress-body">
+        <strong>Scraping: "${escapeHtml(p.query)}"</strong>
+        <small>Expected 5–${p.count > 200 ? "20" : "10"} minutes. You can leave this page open or come back later.</small>
       </div>
-      <div class="timer" id="elapsedTimer">0:00</div>
-      <button class="cancel-x" onclick="cancelRun()" title="Cancel">×</button>
-    </div>
-  `;
+      <div class="progress-timer" id="elapsedTimer">0:00</div>
+      <button class="progress-cancel" onclick="cancelRun()" title="Cancel">×</button>
+    </div>`;
 }
 
-function hideProgressBanner() {
-  document.getElementById("progressBanner").innerHTML = "";
-}
+function hideProgressBanner() { document.getElementById("progressBanner").innerHTML = ""; }
 
 function updateTimer() {
   if (!STATE.pendingRun) return;
@@ -653,29 +745,26 @@ async function pollRunStatus() {
   try {
     const r = await fetch(`/api/run-status?runId=${STATE.pendingRun.runId}`);
     const data = await r.json();
-    if (!r.ok) return; // try again next interval
+    if (!r.ok) return;
 
     if (data.isDone) {
       stopPolling();
       if (data.isSuccess) {
-        // Save to cache
         const saved = {
-          query: STATE.pendingRun.query,
-          datasetId: STATE.pendingRun.datasetId,
-          scrapedAt: Date.now(),
-          leadCount: data.itemCount || 0,
+          query: STATE.pendingRun.query, datasetId: STATE.pendingRun.datasetId,
+          scrapedAt: Date.now(), leadCount: data.itemCount || 0,
         };
         STATE.savedQueries.unshift(saved);
-        STATE.savedQueries = STATE.savedQueries.slice(0, 20); // keep last 20
+        STATE.savedQueries = STATE.savedQueries.slice(0, 20);
         STATE.pendingRun = null;
         save();
 
         STATE.activeDatasets = [saved];
-        STATE.activeQueryLabel = `(${saved.query})`;
+        STATE.activeQueryLabel = `· ${saved.query}`;
         hideProgressBanner();
         await loadLeads();
         renderSavedQueries();
-        toast(`✓ Done! ${saved.leadCount} leads ready.`);
+        toast(`✓ Done! ${saved.leadCount} leads ready`, "success");
       } else {
         STATE.pendingRun = null;
         save();
@@ -683,17 +772,15 @@ async function pollRunStatus() {
         toast(`Scrape failed: ${data.status}`, "danger");
       }
     }
-  } catch (err) {
-    console.error("Poll error", err);
-  }
+  } catch (err) { console.error("Poll error", err); }
 }
 
 function startPolling() {
   stopPolling();
-  pollInterval = setInterval(pollRunStatus, 30000); // every 30s
+  pollInterval = setInterval(pollRunStatus, 30000);
   timerInterval = setInterval(updateTimer, 1000);
   updateTimer();
-  pollRunStatus(); // also poll immediately
+  pollRunStatus();
 }
 
 function stopPolling() {
@@ -706,68 +793,43 @@ async function cancelRun() {
   if (!confirm("Cancel this scrape?\n\n✓ Apify scrape will be STOPPED (no more charges)\n✓ Whatever leads were scraped so far will be SHOWN below\n✓ Partial results saved to cache")) return;
 
   const pending = STATE.pendingRun;
-
-  // Show cancelling state in banner
-  const banner = document.getElementById("progressBanner");
-  banner.innerHTML = `
+  document.getElementById("progressBanner").innerHTML = `
     <div class="progress-banner" style="background:linear-gradient(135deg,#FEE2E2,#FECACA);border-color:var(--danger);">
-      <div class="icon" style="border-color:#FCA5A5;border-top-color:var(--danger);"></div>
-      <div class="body">
+      <div class="progress-icon" style="border-color:#FCA5A5;border-top-color:var(--danger);"></div>
+      <div class="progress-body">
         <strong style="color:#991B1B;">Stopping scrape & fetching partial results...</strong>
         <small style="color:#7F1D1D;">Aborting Apify run for "${escapeHtml(pending.query)}"</small>
       </div>
-    </div>
-  `;
+    </div>`;
 
   try {
-    // 1. Tell Apify to abort the run (stops further charges)
     const r = await fetch("/api/abort-run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ runId: pending.runId }),
     });
     const data = await r.json();
-
-    // 2. Stop local polling regardless
     stopPolling();
-
-    if (!r.ok) {
-      console.error("Abort failed:", data);
-      // Still continue — Apify might already be done, try fetching anyway
-    }
-
     const itemCount = data.itemCount || 0;
-
-    // 3. Brief pause to let Apify flush dataset (~2 seconds)
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // 4. Save partial dataset to cache (so user can return to it)
     const partialQuery = {
-      query: pending.query + " (partial)",
-      datasetId: pending.datasetId,
-      scrapedAt: Date.now(),
-      leadCount: itemCount,
-      isPartial: true,
+      query: pending.query + " (partial)", datasetId: pending.datasetId,
+      scrapedAt: Date.now(), leadCount: itemCount, isPartial: true,
     };
     STATE.savedQueries.unshift(partialQuery);
     STATE.savedQueries = STATE.savedQueries.slice(0, 20);
     STATE.pendingRun = null;
     save();
 
-    // 5. Display partial results
     STATE.activeDatasets = [partialQuery];
-    STATE.activeQueryLabel = `(${pending.query} — partial, ${itemCount} leads)`;
+    STATE.activeQueryLabel = `· ${pending.query} (partial, ${itemCount})`;
     hideProgressBanner();
     await loadLeads();
     renderSavedQueries();
 
-    if (itemCount > 0) {
-      toast(`✓ Scrape stopped. ${itemCount} leads loaded.`);
-    } else {
-      toast(`Scrape cancelled. No leads were scraped yet.`, "danger");
-    }
+    if (itemCount > 0) toast(`✓ Stopped. ${itemCount} leads loaded`, "success");
+    else toast(`Cancelled. No leads scraped yet`, "danger");
   } catch (err) {
-    console.error("Cancel error:", err);
     stopPolling();
     STATE.pendingRun = null;
     save();
@@ -776,18 +838,15 @@ async function cancelRun() {
   }
 }
 
-// ===== Load leads from active datasets =====
 async function loadLeads() {
   const grid = document.getElementById("leadGrid");
 
-  // EMPTY STATE: no active dataset = no leads displayed
   if (STATE.activeDatasets.length === 0) {
     STATE.allLeads = [];
     STATE.filteredLeads = [];
     document.getElementById("statTotal").textContent = "0";
     document.getElementById("statSource").textContent = "no search yet";
     document.getElementById("statFiltered").textContent = "0";
-    document.getElementById("statFilteredSub") && (document.getElementById("statFilteredSub").textContent = "—");
     document.getElementById("statRating").textContent = "—";
     document.getElementById("resultsCount").textContent = "0";
     document.getElementById("activeQueryLabel").textContent = "";
@@ -795,25 +854,19 @@ async function loadLeads() {
     const hasSaved = STATE.savedQueries.length > 0;
     grid.innerHTML = `
       <div class="empty">
-        <h3>👈 Generate your first leads</h3>
-        <p style="max-width:520px;margin:8px auto;">
-          Left sidebar mein <strong>Country, City</strong> aur <strong>Category</strong> select karo,
-          phir <strong>⚡ Generate Leads</strong> click karo.<br><br>
-          Apify Google Maps se fresh <strong>no-website businesses</strong> scrape karega — 3-5 minutes lagenge.
-        </p>
-        ${hasSaved ? `<p style="margin-top:16px;font-size:13px;">Ya niche <strong>"Past Searches"</strong> se koi cached query click karo (instant, free).</p>` : ""}
-      </div>
-    `;
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4-4"/></svg></div>
+        <h3>Generate your first leads</h3>
+        <p>Pick a country, city, and category on the left, then click <strong>Generate Leads</strong> to scrape verified no-website businesses from Google Maps.</p>
+        ${hasSaved ? `<p style="margin-top:14px;font-size:13px;color:var(--gray-600);">Or click a chip in "Past Searches" to instantly reload a previous scrape.</p>` : ""}
+      </div>`;
     return;
   }
 
-  grid.innerHTML = '<div class="loading"><div class="spinner"></div> Loading leads...</div>';
-
+  grid.innerHTML = '<div class="loading-state"><div class="spinner"></div> Loading leads...</div>';
   const datasetParam = "datasetIds=" + STATE.activeDatasets.map(d => d.datasetId).join(",");
 
   try {
-    const url = "/api/leads?" + datasetParam + "&limit=200&sort=" + STATE.sort;
-    const r = await fetch(url);
+    const r = await fetch("/api/leads?" + datasetParam + "&limit=200&sort=" + STATE.sort);
     if (!r.ok) {
       const err = await r.json();
       throw new Error(err.error || "Failed to load");
@@ -821,15 +874,11 @@ async function loadLeads() {
     const data = await r.json();
     STATE.allLeads = data.leads;
     applyClientFilters();
-
-    // update stats
     document.getElementById("statTotal").textContent = data.total;
     document.getElementById("statSource").textContent = `${STATE.activeDatasets.length} dataset${STATE.activeDatasets.length > 1 ? "s" : ""}`;
-
-    // also load /api/stats for avg rating
     loadStats(datasetParam);
   } catch (err) {
-    grid.innerHTML = `<div class="empty"><h3>Could not load leads</h3><p>${err.message}</p></div>`;
+    grid.innerHTML = `<div class="empty"><h3>Could not load leads</h3><p>${escapeHtml(err.message)}</p></div>`;
   }
 }
 
@@ -842,7 +891,6 @@ async function loadStats(datasetParam) {
   } catch (e) {}
 }
 
-// ===== Client-side filtering on already-loaded leads =====
 function applyClientFilters() {
   const f = STATE.filters;
   let list = STATE.allLeads.slice();
@@ -858,7 +906,6 @@ function renderLeads() {
   const grid = document.getElementById("leadGrid");
   grid.innerHTML = "";
 
-  // sort
   const list = STATE.filteredLeads.slice();
   if (STATE.sort === "rating") list.sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
   else if (STATE.sort === "reviews") list.sort((a, b) => b.reviews - a.reviews);
@@ -870,9 +917,19 @@ function renderLeads() {
 
   if (list.length === 0) {
     if (STATE.allLeads.length === 0) {
-      grid.innerHTML = '<div class="empty"><h3>No leads yet</h3><p>Pick Country, City, and Category on the left, then click <strong>Generate Leads</strong> to scrape from Apify.</p></div>';
+      grid.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4-4"/></svg></div>
+          <h3>No leads yet</h3>
+          <p>Pick a country, city, and category on the left, then click <strong>Generate Leads</strong>.</p>
+        </div>`;
     } else {
-      grid.innerHTML = '<div class="empty"><h3>No leads match your filters</h3><p>Try lowering rating or reviews requirements.</p></div>';
+      grid.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon" style="background:var(--warning-soft);color:var(--warning);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div>
+          <h3>No leads match your filters</h3>
+          <p>Try lowering the minimum rating or review count.</p>
+        </div>`;
     }
     return;
   }
@@ -885,25 +942,26 @@ function renderLeads() {
     const card = document.createElement("div");
     card.className = "lead-card" + (cardClass ? " " + cardClass : "");
     card.innerHTML = `
+      <span class="status-tag"></span>
       <div class="lead-name">${escapeHtml(L.name)}</div>
-      <div class="lead-niche">${escapeHtml(L.niche)} • ${escapeHtml(L.city || "—")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</div>
+      <div class="lead-context"><span class="niche">${escapeHtml(L.niche)}</span> · ${escapeHtml(L.city || "—")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</div>
       <div class="lead-meta">
         ${L.rating > 0 ? `<span class="badge rating">⭐ ${L.rating.toFixed(1)}</span>` : ""}
         ${L.reviews > 0 ? `<span class="badge reviews">${L.reviews} reviews</span>` : ""}
-        <span class="badge no-site">No website</span>
+        <span class="badge no-web">No website</span>
         ${L.photos > 0 ? `<span class="badge">${L.photos} photos</span>` : ""}
       </div>
-      <div class="contact-row ${isUnlocked ? "" : "locked"}">
-        <div class="contact-line"><strong>📍</strong> <span>${escapeHtml(L.address || "—")}</span></div>
-        <div class="contact-line"><strong>📞</strong> <span>${escapeHtml(L.phone || "—")}</span></div>
-        <div class="contact-line"><strong>✉️</strong> <span>${escapeHtml(L.email || "—")}</span></div>
+      <div class="contact ${isUnlocked ? "" : "locked"}">
+        <div class="contact-line"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1c-3 0-5 2-5 5 0 4 5 9 5 9s5-5 5-9c0-3-2-5-5-5z"/><circle cx="8" cy="6" r="2"/></svg><span>${escapeHtml(L.address || "—")}</span></div>
+        <div class="contact-line"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2h3l1 4-2 1c1 3 3 5 6 6l1-2 4 1v3c0 0 0 1-1 1-7 0-12-5-12-12 0-1 1-1 1-1z"/></svg><span>${escapeHtml(L.phone || "—")}</span></div>
+        <div class="contact-line"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 5l6 4 6-4"/></svg><span>${escapeHtml(L.email || "—")}</span></div>
       </div>
       ${!isUnlocked ? '<div class="lock-overlay">🔒 Unlock to reveal</div>' : ""}
-      ${isPending ? '<div style="margin:8px 0;padding:8px 10px;background:#FEF3C7;border-radius:6px;font-size:12px;color:#92400E;text-align:center;">⏳ Awaiting admin review for refund</div>' : ""}
+      ${isPending ? '<div class="pending-banner">⏳ Awaiting admin review for refund</div>' : ""}
       <div class="lead-actions">
         ${isUnlocked
-          ? `<button class="btn btn-secondary" onclick="openDetail('${L.id}')">View details</button>`
-          : `<button class="btn btn-primary" onclick="unlockLead('${L.id}')">🔓 Unlock — ${L.cost} credit${L.cost > 1 ? "s" : ""}</button>`}
+          ? `<button class="btn btn-outline" onclick="openDetail('${L.id}')">View details</button>`
+          : `<button class="btn btn-solid" onclick="unlockLead('${L.id}')">🔓 Unlock — ${L.cost} credit${L.cost > 1 ? "s" : ""}</button>`}
       </div>
     `;
     grid.appendChild(card);
@@ -918,15 +976,14 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ===== Past queries (chips) =====
 function renderSavedQueries() {
   const area = document.getElementById("savedQueriesArea");
   const wrap = document.getElementById("savedQueries");
   if (STATE.savedQueries.length === 0) { area.style.display = "none"; return; }
   area.style.display = "block";
   wrap.innerHTML = STATE.savedQueries.map((q, i) => `
-    <button class="query-chip" onclick="loadCached(${i})" title="${escapeHtml(q.query)} — ${q.leadCount} leads, ${timeAgo(q.scrapedAt)}">
-      ${escapeHtml(q.query.length > 28 ? q.query.slice(0, 26) + "…" : q.query)}
+    <button class="chip" onclick="loadCached(${i})" title="${escapeHtml(q.query)} · ${q.leadCount} leads · ${timeAgo(q.scrapedAt)}">
+      ${escapeHtml(q.query.length > 24 ? q.query.slice(0, 22) + "…" : q.query)}
       <span class="x" onclick="event.stopPropagation();removeCached(${i})">×</span>
     </button>
   `).join("");
@@ -935,9 +992,9 @@ function renderSavedQueries() {
 function loadCached(i) {
   const q = STATE.savedQueries[i];
   STATE.activeDatasets = [q];
-  STATE.activeQueryLabel = `(${q.query})`;
+  STATE.activeQueryLabel = `· ${q.query}`;
   loadLeads();
-  toast(`Loading cached "${q.query}"`);
+  toast(`Loaded "${q.query}"`, "success");
 }
 
 function removeCached(i) {
@@ -949,12 +1006,11 @@ function removeCached(i) {
 function timeAgo(ts) {
   const m = Math.floor((Date.now() - ts) / 60000);
   if (m < 1) return "just now";
-  if (m < 60) return `${m} min ago`;
-  if (m < 1440) return `${Math.floor(m / 60)} hr ago`;
-  return `${Math.floor(m / 1440)} day ago`;
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.floor(m / 60)}h ago`;
+  return `${Math.floor(m / 1440)}d ago`;
 }
 
-// ===== Unlock =====
 function unlockLead(leadId) {
   const L = STATE.allLeads.find(x => x.id === leadId);
   if (!L) return;
@@ -969,62 +1025,61 @@ function unlockLead(leadId) {
     leadSnapshot: L, status: "cold", notes: "",
     unlockedAt: new Date().toISOString(), cost: L.cost,
   };
-  logHistory(`Unlocked ${L.name}`, -L.cost);
+  logHistory(`Unlocked: ${L.name}`, -L.cost);
   save();
   renderLeads();
-  toast(`✓ Unlocked! ${L.cost} credit deducted.`);
+  toast(`✓ Unlocked. ${L.cost} credit deducted`, "success");
   setTimeout(() => openDetail(leadId), 300);
 }
 
 function buyCredits(qty, price, bonus = 0) {
   STATE.credits += qty + bonus;
-  logHistory(`Bought ${qty} credits${bonus ? ` (+${bonus} bonus)` : ""} for $${price}`, qty + bonus);
+  logHistory(`Bought ${qty}${bonus ? ` (+${bonus} bonus)` : ""} for $${price}`, qty + bonus);
   save();
   closeModal("pricing");
   renderLeads();
-  toast(`✓ ${qty + bonus} credits added!`);
+  toast(`✓ ${qty + bonus} credits added`, "success");
 }
 
 function openDetail(leadId) {
   const U = STATE.unlocked[leadId];
   if (!U) return;
   const L = U.leadSnapshot;
-  const el = document.getElementById("detailContent");
-  el.innerHTML = `
+  document.getElementById("detailContent").innerHTML = `
     <button class="modal-close" onclick="closeModal('detail')">×</button>
     <h2>${escapeHtml(L.name)}</h2>
-    <p class="sub">${escapeHtml(L.niche)} • ${escapeHtml(L.city || "")} • Unlocked ${new Date(U.unlockedAt).toLocaleDateString()}</p>
+    <p class="sub">${escapeHtml(L.niche)} · ${escapeHtml(L.city || "")} · Unlocked ${new Date(U.unlockedAt).toLocaleDateString()}</p>
     <div class="lead-meta" style="margin-bottom:14px;">
       ${L.rating > 0 ? `<span class="badge rating">⭐ ${L.rating.toFixed(1)}</span>` : ""}
       ${L.reviews > 0 ? `<span class="badge reviews">${L.reviews} reviews</span>` : ""}
-      <span class="badge no-site">No website</span>
+      <span class="badge no-web">No website</span>
     </div>
+    <div class="detail-section-title">Contact details</div>
     <div class="detail-grid">
-      <div><label>Address</label><div class="val">${escapeHtml(L.address || "—")}</div></div>
-      <div><label>Phone</label><div class="val">${escapeHtml(L.phone || "—")}</div></div>
-      <div><label>Email</label><div class="val">${escapeHtml(L.email || "—")}</div></div>
-      <div><label>Hours</label><div class="val">${escapeHtml(L.hours || "—")}</div></div>
-      ${L.gmb_url ? `<div><label>GMB Profile</label><div class="val"><a href="${L.gmb_url}" target="_blank" style="color:var(--accent);">Open in Maps ↗</a></div></div>` : ""}
-      ${L.gmb_place_id ? `<div><label>Place ID</label><div class="val" style="font-family:monospace;font-size:11px;">${escapeHtml(L.gmb_place_id)}</div></div>` : ""}
+      <div class="detail-cell"><label>Address</label><div class="val">${escapeHtml(L.address || "—")}</div></div>
+      <div class="detail-cell"><label>Phone</label><div class="val">${escapeHtml(L.phone || "—")}</div></div>
+      <div class="detail-cell"><label>Email</label><div class="val">${escapeHtml(L.email || "—")}</div></div>
+      <div class="detail-cell"><label>Hours</label><div class="val">${escapeHtml(L.hours || "—")}</div></div>
+      ${L.gmb_url ? `<div class="detail-cell"><label>GMB Profile</label><div class="val"><a href="${L.gmb_url}" target="_blank">Open in Maps ↗</a></div></div>` : ""}
+      ${L.gmb_place_id ? `<div class="detail-cell"><label>Place ID</label><div class="val" style="font-family:monospace;font-size:11px;">${escapeHtml(L.gmb_place_id)}</div></div>` : ""}
     </div>
-    <div style="margin:18px 0;">
-      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:600;display:block;margin-bottom:6px;">Status</label>
-      <select id="statusSel" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;" onchange="updateStatus('${L.id}', this.value)">
-        <option value="cold" ${U.status === "cold" ? "selected" : ""}>❄️ Cold</option>
+    <div class="detail-section-title">CRM</div>
+    <div class="field">
+      <select class="select" id="statusSel" onchange="updateStatus('${L.id}', this.value)">
+        <option value="cold" ${U.status === "cold" ? "selected" : ""}>❄️ Cold (not contacted)</option>
         <option value="contacted" ${U.status === "contacted" ? "selected" : ""}>📨 Contacted</option>
         <option value="replied" ${U.status === "replied" ? "selected" : ""}>💬 Replied</option>
         <option value="closed" ${U.status === "closed" ? "selected" : ""}>✅ Closed (won)</option>
       </select>
     </div>
-    <div style="margin:14px 0;">
-      <label style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;font-weight:600;display:block;margin-bottom:6px;">Notes</label>
-      <textarea id="notesTxt" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;">${escapeHtml(U.notes || "")}</textarea>
-      <button class="btn btn-secondary" style="margin-top:8px;max-width:140px;" onclick="saveNotes('${L.id}')">Save notes</button>
+    <div class="field">
+      <textarea id="notesTxt" rows="3" placeholder="Pitch ideas, follow-up reminders, key contacts..." style="width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;">${escapeHtml(U.notes || "")}</textarea>
+      <button class="btn btn-ghost" style="margin-top:8px;max-width:120px;" onclick="saveNotes('${L.id}')">Save notes</button>
     </div>
-    <div style="display:flex;gap:8px;margin-top:18px;border-top:1px solid var(--border);padding-top:16px;">
-      <button class="btn btn-primary" onclick="copyContact('${L.id}')">📋 Copy contact</button>
+    <div style="display:flex;gap:8px;margin-top:16px;border-top:1px solid var(--gray-100);padding-top:16px;">
+      <button class="btn btn-solid" onclick="copyContact('${L.id}')">📋 Copy contact</button>
       ${U.reportStatus === "pending"
-        ? `<button class="btn btn-ghost" disabled style="background:#FEF3C7;color:#92400E;border-color:#FCD34D;cursor:not-allowed;">⏳ Under review — refund pending</button>`
+        ? `<button class="btn btn-ghost" disabled style="background:var(--warning-soft);color:#92400E;border-color:#FCD34D;cursor:not-allowed;">⏳ Under review</button>`
         : `<button class="btn btn-ghost" onclick="reportBad('${L.id}')">⚠ Report bad lead</button>`
       }
     </div>
@@ -1035,17 +1090,16 @@ function openDetail(leadId) {
 function updateStatus(id, status) { STATE.unlocked[id].status = status; save(); renderMyLeads(); }
 function saveNotes(id) {
   STATE.unlocked[id].notes = document.getElementById("notesTxt").value;
-  save(); toast("✓ Notes saved");
+  save(); toast("✓ Notes saved", "success");
 }
 function copyContact(id) {
   const L = STATE.unlocked[id].leadSnapshot;
   const txt = `${L.name}\n${L.address || ""}\n${L.phone || ""}\n${L.email || ""}`;
-  navigator.clipboard.writeText(txt).then(() => toast("✓ Copied"));
+  navigator.clipboard.writeText(txt).then(() => toast("✓ Copied", "success"));
 }
+
 function reportBad(id) {
-  // Store the lead being reported so submitReport() can access it
   window.LF_REPORTING_LEAD_ID = id;
-  // Reset form
   document.querySelectorAll('#modal-report input[type="checkbox"]').forEach(cb => cb.checked = false);
   document.getElementById('reportNotes').value = '';
   openModal("report");
@@ -1058,22 +1112,14 @@ async function submitReport() {
   if (!U) return;
   const L = U.leadSnapshot;
 
-  // Already pending? Don't allow double-report
   if (U.reportStatus === "pending") {
     toast("Already reported. Wait for admin review.", "danger");
     return;
   }
 
-  // Collect selected reasons
   const reasons = [];
-  document.querySelectorAll('#modal-report input[type="checkbox"]:checked').forEach(cb => {
-    reasons.push(cb.value);
-  });
-
-  if (reasons.length === 0) {
-    toast("Please select at least one reason", "danger");
-    return;
-  }
+  document.querySelectorAll('#modal-report input[type="checkbox"]:checked').forEach(cb => reasons.push(cb.value));
+  if (reasons.length === 0) { toast("Please select at least one reason", "danger"); return; }
 
   const notes = document.getElementById("reportNotes").value.trim();
   const btn = document.getElementById("submitReportBtn");
@@ -1083,46 +1129,29 @@ async function submitReport() {
   try {
     if (!window.LF_USER) throw new Error("Not signed in");
 
-    // Insert into Supabase, get the report ID back so we can track it
     const { data, error } = await supabaseClient
       .from("bad_lead_reports")
       .insert({
-        user_id: window.LF_USER.id,
-        user_email: window.LF_USER.email,
-        lead_id: L.id,
-        lead_name: L.name,
-        lead_niche: L.niche,
-        lead_address: L.address,
-        lead_phone: L.phone,
-        lead_email: L.email,
-        lead_city: L.city,
-        lead_country: L.countryName,
-        lead_gmb_url: L.gmb_url,
-        lead_rating: L.rating,
-        lead_reviews: L.reviews,
-        reasons: reasons,
-        notes: notes,
-        status: "open",
+        user_id: window.LF_USER.id, user_email: window.LF_USER.email,
+        lead_id: L.id, lead_name: L.name, lead_niche: L.niche,
+        lead_address: L.address, lead_phone: L.phone, lead_email: L.email,
+        lead_city: L.city, lead_country: L.countryName, lead_gmb_url: L.gmb_url,
+        lead_rating: L.rating, lead_reviews: L.reviews,
+        reasons, notes, status: "open",
       })
-      .select()
-      .single();
+      .select().single();
 
     if (error) throw error;
 
-    // Mark lead as "pending review" — NO credit refund yet
-    // Refund happens only when admin approves (verified status)
     STATE.unlocked[id].reportStatus = "pending";
     STATE.unlocked[id].reportId = data.id;
     STATE.unlocked[id].reportedAt = new Date().toISOString();
     logHistory(`Reported (pending review): ${L.name}`, 0);
     save();
 
-    closeModal("report");
-    closeModal("detail");
-    renderLeads();
-    renderMyLeads();
-    renderHistory();
-    toast("✓ Report submitted. Credit will refund if admin approves (usually within 24h).");
+    closeModal("report"); closeModal("detail");
+    renderLeads(); renderMyLeads(); renderHistory();
+    toast("✓ Report submitted. Credit will refund if admin approves.", "success");
   } catch (err) {
     toast("Could not submit: " + err.message, "danger");
   } finally {
@@ -1131,30 +1160,19 @@ async function submitReport() {
   }
 }
 
-// ===== Check pending reports on dashboard load =====
-// Syncs Supabase report statuses → refunds approved, restores rejected
 async function checkPendingReports() {
   if (!window.LF_USER) return;
-
-  // Find all leads with pending reports
   const pendingEntries = Object.entries(STATE.unlocked)
     .filter(([id, u]) => u.reportStatus === "pending" && u.reportId);
-
   if (pendingEntries.length === 0) return;
-
   const reportIds = pendingEntries.map(([id, u]) => u.reportId);
 
   try {
     const { data: reports, error } = await supabaseClient
-      .from("bad_lead_reports")
-      .select("id, status, reviewed_at, reviewer_notes")
-      .in("id", reportIds);
-
+      .from("bad_lead_reports").select("id, status, reviewed_at, reviewer_notes").in("id", reportIds);
     if (error) throw error;
 
-    let refundedCount = 0;
-    let rejectedCount = 0;
-    let totalRefund = 0;
+    let refundedCount = 0, rejectedCount = 0, totalRefund = 0;
 
     for (const report of reports) {
       const entry = pendingEntries.find(([id, u]) => u.reportId === report.id);
@@ -1162,46 +1180,40 @@ async function checkPendingReports() {
       const [leadId, U] = entry;
 
       if (report.status === "verified") {
-        // ✓ Admin approved — refund credit + remove lead
         const refund = U.cost || 1;
         STATE.credits += refund;
         totalRefund += refund;
-        logHistory(`✓ Refund approved by admin: ${U.leadSnapshot.name}`, refund);
+        logHistory(`✓ Refund approved: ${U.leadSnapshot.name}`, refund);
         delete STATE.unlocked[leadId];
         refundedCount++;
       } else if (report.status === "rejected") {
-        // ✕ Admin rejected — clear pending state, lead returns to normal
         delete STATE.unlocked[leadId].reportStatus;
         delete STATE.unlocked[leadId].reportId;
         delete STATE.unlocked[leadId].reportedAt;
         logHistory(`✕ Report rejected: ${U.leadSnapshot.name}`, 0);
         rejectedCount++;
       }
-      // status === "open" → still pending, no action
     }
 
     if (refundedCount > 0 || rejectedCount > 0) {
       save();
-      renderLeads();
-      renderMyLeads();
-      renderHistory();
-      if (refundedCount > 0) {
-        toast(`✓ ${refundedCount} refund(s) approved! +${totalRefund} credits`);
-      }
-      if (rejectedCount > 0) {
-        setTimeout(() => toast(`${rejectedCount} report(s) rejected — leads returned`, "danger"), refundedCount > 0 ? 3000 : 0);
-      }
+      renderLeads(); renderMyLeads(); renderHistory();
+      if (refundedCount > 0) toast(`✓ ${refundedCount} refund(s) approved! +${totalRefund} credits`, "success");
+      if (rejectedCount > 0) setTimeout(() => toast(`${rejectedCount} report(s) rejected`, "danger"), refundedCount > 0 ? 3000 : 0);
     }
-  } catch (err) {
-    console.error("Failed to check pending reports:", err);
-  }
+  } catch (err) { console.error("Failed to check pending reports:", err); }
 }
 
 function renderMyLeads() {
   const wrap = document.getElementById("myLeadsView");
   const ids = Object.keys(STATE.unlocked);
   if (ids.length === 0) {
-    wrap.innerHTML = '<div class="empty"><h3>No leads yet</h3><p>Unlock leads from Explore — they appear here forever.</p></div>';
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div>
+        <h3>No leads unlocked yet</h3>
+        <p>Unlock leads from the Explore tab — they will appear here forever.</p>
+      </div>`;
     return;
   }
   const rows = ids.map(id => {
@@ -1209,32 +1221,32 @@ function renderMyLeads() {
     const L = U.leadSnapshot;
     const isPending = U.reportStatus === "pending";
     const statusPill = isPending
-      ? `<span class="status-pill" style="background:#FEF3C7;color:#92400E;">⏳ Under review</span>`
+      ? `<span class="status-pill" style="background:var(--warning-soft);color:#92400E;">⏳ Under review</span>`
       : `<span class="status-pill status-${U.status}">${U.status}</span>`;
     return `<tr${isPending ? ' style="background:#FFFBEB;"' : ''}>
-      <td><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:12px;color:var(--muted);">${escapeHtml(L.niche)}</span></td>
+      <td><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:11px;color:var(--gray-500);">${escapeHtml(L.niche)}</span></td>
       <td>${escapeHtml(L.city || "")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</td>
       <td>${escapeHtml(L.phone || "—")}</td>
       <td>${escapeHtml(L.email || "—")}</td>
       <td>${statusPill}</td>
-      <td><button class="btn btn-secondary" style="max-width:90px;" onclick="openDetail('${L.id}')">Open</button></td>
+      <td><button class="btn btn-outline" style="max-width:90px;padding:6px 12px;font-size:12px;" onclick="openDetail('${L.id}')">Open</button></td>
     </tr>`;
   }).join("");
-  wrap.innerHTML = `<table class="saved-table"><thead><tr><th>Business</th><th>Location</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  wrap.innerHTML = `<div class="table-card"><table><thead><tr><th>Business</th><th>Location</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderHistory() {
   const tbody = document.getElementById("historyBody");
   if (STATE.history.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px;">No transactions yet</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:48px;color:var(--gray-500);">No transactions yet</td></tr>`;
     return;
   }
   tbody.innerHTML = STATE.history.map(h => `
     <tr>
-      <td style="font-size:12px;color:var(--muted);">${h.date}</td>
+      <td style="font-size:12px;color:var(--gray-500);font-variant-numeric:tabular-nums;">${h.date}</td>
       <td>${escapeHtml(h.action)}</td>
-      <td style="font-weight:600;color:${h.delta > 0 ? "var(--success)" : "var(--danger)"}">${h.delta > 0 ? "+" : ""}${h.delta}</td>
-      <td>${h.balance}</td>
+      <td style="font-weight:700;color:${h.delta > 0 ? "var(--success)" : h.delta < 0 ? "var(--danger)" : "var(--gray-500)"};font-variant-numeric:tabular-nums;">${h.delta > 0 ? "+" : ""}${h.delta || "—"}</td>
+      <td style="font-variant-numeric:tabular-nums;font-weight:600;">${h.balance}</td>
     </tr>
   `).join("");
 }
@@ -1255,16 +1267,16 @@ function exportCSV() {
   a.href = url; a.download = `leadforge_export_${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-  toast(`✓ Exported ${ids.length} leads`);
+  toast(`✓ Exported ${ids.length} leads`, "success");
 }
 
 function openModal(name) { document.getElementById("modal-" + name).classList.add("active"); }
 function closeModal(name) { document.getElementById("modal-" + name).classList.remove("active"); }
 document.querySelectorAll(".modal-bg").forEach(m => m.addEventListener("click", e => { if (e.target === m) m.classList.remove("active"); }));
 
-document.querySelectorAll(".nav-tab").forEach(b => {
+document.querySelectorAll(".tab").forEach(b => {
   b.addEventListener("click", () => {
-    document.querySelectorAll(".nav-tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
     document.getElementById("tab-" + b.dataset.tab).classList.add("active");
@@ -1280,17 +1292,18 @@ function toast(msg, type = "") {
   setTimeout(() => t.className = "toast " + type, 2800);
 }
 
-// Filter bindings
 document.getElementById("fRating").addEventListener("input", e => {
   STATE.filters.minRating = parseFloat(e.target.value);
-  document.getElementById("ratingVal").textContent = e.target.value;
+  document.getElementById("ratingVal").textContent = parseFloat(e.target.value).toFixed(1);
+  applyClientFilters();
 });
 document.getElementById("fReviews").addEventListener("input", e => {
   STATE.filters.minReviews = parseInt(e.target.value);
-  document.getElementById("reviewsVal").textContent = e.target.value;
+  document.getElementById("reviewsVal").textContent = e.target.value + (e.target.value === "500" ? "+" : "");
+  applyClientFilters();
 });
-document.getElementById("fHasPhone").addEventListener("change", e => { STATE.filters.hasPhone = e.target.checked; });
-document.getElementById("fHasEmail").addEventListener("change", e => { STATE.filters.hasEmail = e.target.checked; });
+document.getElementById("fHasPhone").addEventListener("change", e => { STATE.filters.hasPhone = e.target.checked; applyClientFilters(); });
+document.getElementById("fHasEmail").addEventListener("change", e => { STATE.filters.hasEmail = e.target.checked; applyClientFilters(); });
 
 function resetFilters() {
   document.getElementById("fCountry").value = "";
@@ -1302,7 +1315,7 @@ function resetFilters() {
   document.getElementById("reviewsVal").textContent = "0";
   document.getElementById("fHasPhone").checked = false;
   document.getElementById("fHasEmail").checked = false;
-  STATE.filters = { country: "", city: "", niche: "", count: 100, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false };
+  STATE.filters = { country: "", city: "", niche: "", count: 10, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false };
   applyClientFilters();
 }
 
@@ -1310,10 +1323,14 @@ function resetFilters() {
 (async () => {
   populateFilters();
 
-  // Show user email in nav
-  if (window.LF_USER) {
-    document.getElementById("userEmail").textContent = window.LF_USER.email || "";
-  }
+  // Wait briefly for LF_USER from auth guard
+  setTimeout(() => {
+    if (window.LF_USER) {
+      const email = window.LF_USER.email || "";
+      document.getElementById("userEmail").textContent = email;
+      document.getElementById("userAvatar").textContent = (email[0] || "U").toUpperCase();
+    }
+  }, 500);
 
   document.getElementById("creditDisplay").textContent = STATE.credits;
   document.getElementById("myLeadsCount").textContent = Object.keys(STATE.unlocked).length;
@@ -1321,23 +1338,15 @@ function resetFilters() {
 
   renderSavedQueries();
 
-  // Resume polling if there was a pending run
   if (STATE.pendingRun) {
     showProgressBanner();
     startPolling();
   }
 
-  // DON'T auto-load anything on page refresh.
-  // User must explicitly:
-  //   1. Click "⚡ Generate Leads" for a fresh Apify scrape, OR
-  //   2. Click a "Past Searches" chip to load a previously scraped dataset
   STATE.activeDatasets = [];
   STATE.activeQueryLabel = "";
-  await loadLeads();  // will render empty state
+  await loadLeads();
 
-  // Check Supabase for admin review decisions on user's pending reports.
-  // Refunds approved reports, restores rejected ones.
-  // Wait 1 sec for LF_USER to be ready, then run in background.
   setTimeout(() => checkPendingReports(), 1500);
 })();
 </script>
