@@ -69,9 +69,10 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; max-width: 100%; }
   body { background: var(--gray-50); color: var(--gray-900); line-height: 1.5; min-height: 100vh; font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; }
   button, input, select, textarea { font-family: inherit; }
+  .tab-label { display: inline; }
 
   /* ===== Top navbar ===== */
   .nav { background: white; border-bottom: 1px solid var(--gray-200); height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
@@ -312,20 +313,23 @@
     .welcome-card p { font-size: 13px; }
   }
 
-  /* Small tablet & large phone (≤700px) */
-  @media (max-width: 700px) {
-    .nav { padding: 0 14px; height: 56px; }
-    .nav-left { gap: 12px; }
-    .logo { font-size: 17px; }
-    .live-dot { width: 6px; height: 6px; }
-    .tabs { display: flex; gap: 2px; }
-    .tab { padding: 6px 8px; font-size: 12px; }
-    .tab svg { width: 13px; height: 13px; }
-    .tab span:not(.badge-count) { display: none; }
-    .tab .badge-count { padding: 0 5px; font-size: 10px; }
-    .user-email, .user-menu .btn-icon-text { display: none; }
-    .user-menu { padding-left: 8px; margin-left: 0; gap: 6px; }
-    .credit-pill { padding: 6px 11px; font-size: 12px; }
+  /* Small tablet & large phone (≤780px) */
+  @media (max-width: 780px) {
+    .nav { padding: 0 12px; height: 56px; gap: 8px; }
+    .nav-left { gap: 8px; flex: 1; min-width: 0; }
+    .logo { font-size: 16px; flex-shrink: 0; }
+    .live-dot { width: 6px; height: 6px; margin-left: 4px; }
+    .tabs { display: flex; gap: 2px; flex-shrink: 0; }
+    .tab { padding: 7px 9px; font-size: 12px; gap: 4px; }
+    .tab svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .tab-label { display: none; }
+    .tab .badge-count { padding: 0 5px; font-size: 10px; min-width: 16px; text-align: center; }
+    .nav-right { gap: 6px; flex-shrink: 0; }
+    .user-email { display: none; }
+    .user-menu .btn-icon-text { display: none; }
+    .user-menu { padding-left: 6px; margin-left: 0; gap: 0; border-left-color: var(--gray-100); }
+    .user-avatar { width: 30px; height: 30px; font-size: 13px; }
+    .credit-pill { padding: 6px 11px; font-size: 12px; gap: 5px; }
     .credit-pill svg { width: 12px; height: 12px; }
     .layout-wrap { padding: 14px; }
     .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -333,6 +337,17 @@
     .page-title { font-size: 20px; }
     .results-header { gap: 8px; }
     .results-meta { font-size: 12px; }
+  }
+
+  /* Very small phones (≤400px) — even tighter */
+  @media (max-width: 400px) {
+    .nav { padding: 0 10px; }
+    .nav-left { gap: 6px; }
+    .logo { font-size: 14px; }
+    .tab { padding: 6px 7px; }
+    .credit-pill { padding: 5px 10px; font-size: 11px; }
+    .credit-pill .credit-num { font-size: 12px; }
+    .user-avatar { width: 28px; height: 28px; font-size: 12px; }
   }
 
   /* Phone (≤520px) */
@@ -429,17 +444,18 @@
   <div class="nav-left">
     <div class="logo">Lead<span>Forge</span><span class="live-dot" title="Live"></span></div>
     <div class="tabs">
-      <button class="tab active" data-tab="explore">
+      <button class="tab active" data-tab="explore" title="Explore">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M14 14l-3-3"/></svg>
-        Explore
+        <span class="tab-label">Explore</span>
       </button>
-      <button class="tab" data-tab="my-leads">
+      <button class="tab" data-tab="my-leads" title="My Leads">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
-        My Leads <span class="badge-count" id="myLeadsCount">0</span>
+        <span class="tab-label">My Leads</span>
+        <span class="badge-count" id="myLeadsCount">0</span>
       </button>
-      <button class="tab" data-tab="history">
+      <button class="tab" data-tab="history" title="History">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>
-        History
+        <span class="tab-label">History</span>
       </button>
     </div>
   </div>
