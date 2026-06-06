@@ -48,14 +48,47 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  .nav { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 22px; font-weight: 800; }
+  .nav { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; flex-shrink: 0; }
   .logo .tag { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 11px; margin-left: 8px; font-weight: 700; }
   .nav-right { display: flex; gap: 12px; align-items: center; font-size: 14px; }
-  .nav-right a { color: white; text-decoration: none; font-weight: 600; opacity: 0.9; }
-  .nav-right a:hover { opacity: 1; }
-  .nav-right button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
-  .nav-right button:hover { background: rgba(255,255,255,0.25); }
+  .nav-right .back-link { color: white; text-decoration: none; font-weight: 600; opacity: 0.9; font-size: 13px; }
+  .nav-right .back-link:hover { opacity: 1; }
+
+  .admin-avatar { width: 36px; height: 36px; border-radius: 50%; background: white; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; border: none; transition: all 0.15s; }
+  .admin-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+  .admin-dropdown { display: none; position: absolute; top: calc(100% + 12px); right: 0; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,0.18); padding: 6px; min-width: 240px; z-index: 60; animation: dropDown 0.15s ease-out; }
+  .admin-dropdown.open { display: block; }
+  @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .admin-dropdown-info { padding: 10px 12px; border-bottom: 1px solid #F3F4F6; margin-bottom: 4px; }
+  .admin-dropdown-info .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }
+  .admin-dropdown-info .val { font-size: 13px; color: var(--text); font-weight: 500; word-break: break-all; }
+  .admin-dropdown-action { width: 100%; padding: 9px 12px; background: transparent; border: none; text-align: left; font-size: 13px; color: var(--text); cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 9px; font-weight: 500; font-family: inherit; text-decoration: none; }
+  .admin-dropdown-action:hover { background: #F9FAFB; }
+  .admin-dropdown-action svg { width: 14px; height: 14px; color: var(--muted); }
+  .admin-dropdown-action.danger:hover { background: #FEE2E2; color: var(--danger); }
+  .admin-dropdown-action.danger:hover svg { color: var(--danger); }
+
+  /* ===== Mobile responsive (admin) ===== */
+  @media (max-width: 700px) {
+    .nav { padding: 12px 14px; }
+    .logo { font-size: 16px; }
+    .logo .tag { font-size: 9px; padding: 2px 6px; margin-left: 6px; }
+    .nav-right { gap: 8px; }
+    .nav-right .back-link { font-size: 12px; }
+    .admin-avatar { width: 32px; height: 32px; font-size: 13px; }
+    .admin-dropdown { right: -8px; min-width: 220px; }
+    h1 { font-size: 22px !important; }
+    .container { padding: 20px 14px !important; }
+    .toolbar { padding: 10px 12px; gap: 8px; }
+    .toolbar select, .toolbar input { font-size: 12px; padding: 6px 10px; }
+    .toolbar input { min-width: 0; flex: 1; }
+    table thead { display: none; }
+    table tbody, table tr { display: block; }
+    table tr { background: white; border-bottom: 1px solid var(--border); padding: 14px; }
+    table td { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border: none; font-size: 12px; }
+    table td::before { content: attr(data-label); font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; min-width: 70px; flex-shrink: 0; padding-top: 2px; }
+  }
 
   .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
 
@@ -128,12 +161,39 @@
 
 <nav class="nav">
   <div class="logo">Lead<span style="opacity:0.8;">Forge</span><span class="tag">ADMIN</span></div>
-  <div class="nav-right">
-    <a href="/dashboard">← Back to app</a>
-    <span id="adminEmail" style="opacity:0.8;font-size:13px;"></span>
-    <button onclick="lfLogout()">Sign out</button>
+  <div class="nav-right" style="position:relative;">
+    <a href="/dashboard" class="back-link">← Back to app</a>
+    <button class="admin-avatar" onclick="toggleAdminMenu(event)" title="Account">A</button>
+    <div class="admin-dropdown" id="adminDropdown">
+      <div class="admin-dropdown-info">
+        <div class="label">Signed in as</div>
+        <div class="val" id="adminEmail">—</div>
+      </div>
+      <a href="/dashboard" class="admin-dropdown-action">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l5-5 5 5"/><path d="M8 3v10"/></svg>
+        Dashboard
+      </a>
+      <button class="admin-dropdown-action danger" onclick="lfLogout()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4V2H3v12h7v-2"/><path d="M7 8h7m-3-3l3 3-3 3"/></svg>
+        Sign out
+      </button>
+    </div>
   </div>
 </nav>
+
+<script>
+function toggleAdminMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById("adminDropdown").classList.toggle("open");
+}
+document.addEventListener("click", e => {
+  const dd = document.getElementById("adminDropdown");
+  const wrap = document.querySelector(".nav-right");
+  if (dd && wrap && !wrap.contains(e.target)) {
+    dd.classList.remove("open");
+  }
+});
+</script>
 
 <div class="container">
   <h1>Bad Lead Reports</h1>
@@ -293,28 +353,28 @@ function renderTable() {
   }
   tbody.innerHTML = STATE.filtered.map(r => `
     <tr>
-      <td>
+      <td data-label="Reported">
         <div style="font-weight:600;">${timeAgo(r.reported_at)}</div>
         <div class="lead-sub">${new Date(r.reported_at).toLocaleDateString()}</div>
       </td>
-      <td><div style="font-weight:600;font-size:12px;word-break:break-all;">${escapeHtml(r.user_email || "—")}</div></td>
-      <td>
+      <td data-label="User"><div style="font-weight:600;font-size:12px;word-break:break-all;">${escapeHtml(r.user_email || "—")}</div></td>
+      <td data-label="Business">
         <div class="lead-name">${escapeHtml(r.lead_name || "—")}</div>
         <div class="lead-sub">${escapeHtml(r.lead_niche || "")}</div>
         <div class="lead-sub" style="margin-top:4px;font-family:monospace;font-size:10px;">${escapeHtml((r.lead_phone || "—"))}</div>
       </td>
-      <td>
+      <td data-label="Location">
         <div>${escapeHtml(r.lead_city || "—")}</div>
         <div class="lead-sub">${escapeHtml(r.lead_country || "")}</div>
       </td>
-      <td>
+      <td data-label="Reasons">
         <div class="reasons">
           ${(r.reasons || []).map(rs => `<span class="reason-chip">${escapeHtml(REASON_LABELS[rs] || rs)}</span>`).join("")}
         </div>
         ${r.notes ? `<div class="lead-sub" style="margin-top:6px;font-style:italic;max-width:200px;">"${escapeHtml(r.notes.slice(0, 80))}${r.notes.length > 80 ? '...' : ''}"</div>` : ""}
       </td>
-      <td><span class="status-pill status-${r.status}">${r.status}</span></td>
-      <td>
+      <td data-label="Status"><span class="status-pill status-${r.status}">${r.status}</span></td>
+      <td data-label="Action">
         <div class="actions">
           <button class="action-btn action-view" onclick="openDetail('${r.id}')">View</button>
           ${r.status === "open" ? `
