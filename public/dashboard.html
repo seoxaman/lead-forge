@@ -301,13 +301,124 @@
   /* ===== Inline status text ===== */
   .credit-num { font-variant-numeric: tabular-nums; }
 
-  /* Mobile menu */
+  /* ========== RESPONSIVE BREAKPOINTS ========== */
+
+  /* Tablet (≤900px) */
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .stat-value { font-size: 22px; }
+    .welcome-card { padding: 20px; }
+    .welcome-card h2 { font-size: 20px; }
+    .welcome-card p { font-size: 13px; }
+  }
+
+  /* Small tablet & large phone (≤700px) */
   @media (max-width: 700px) {
-    .nav { padding: 0 16px; }
-    .nav-left { gap: 16px; }
-    .tabs { display: none; }
-    .user-email { display: none; }
-    .layout-wrap { padding: 16px; }
+    .nav { padding: 0 14px; height: 56px; }
+    .nav-left { gap: 12px; }
+    .logo { font-size: 17px; }
+    .live-dot { width: 6px; height: 6px; }
+    .tabs { display: flex; gap: 2px; }
+    .tab { padding: 6px 8px; font-size: 12px; }
+    .tab svg { width: 13px; height: 13px; }
+    .tab span:not(.badge-count) { display: none; }
+    .tab .badge-count { padding: 0 5px; font-size: 10px; }
+    .user-email, .user-menu .btn-icon-text { display: none; }
+    .user-menu { padding-left: 8px; margin-left: 0; gap: 6px; }
+    .credit-pill { padding: 6px 11px; font-size: 12px; }
+    .credit-pill svg { width: 12px; height: 12px; }
+    .layout-wrap { padding: 14px; }
+    .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
+    .page-header .btn-primary { max-width: 100%; }
+    .page-title { font-size: 20px; }
+    .results-header { gap: 8px; }
+    .results-meta { font-size: 12px; }
+  }
+
+  /* Phone (≤520px) */
+  @media (max-width: 520px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 12px; }
+    .stat-icon { width: 28px; height: 28px; margin-bottom: 6px; }
+    .stat-icon svg { width: 14px; height: 14px; }
+    .stat-label { font-size: 10px; }
+    .stat-value { font-size: 19px; }
+    .stat-sub { font-size: 10px; }
+    .welcome-card { padding: 18px; border-radius: 12px; }
+    .welcome-card h2 { font-size: 17px; }
+    .welcome-card p { font-size: 12.5px; }
+    .lead-grid { grid-template-columns: 1fr; gap: 12px; }
+    .lead-card { padding: 16px; }
+    .lead-name { font-size: 15px; }
+    .sidebar { padding: 16px; border-radius: 12px; position: static; }
+    .modal { padding: 20px; border-radius: 12px; max-height: 92vh; }
+    .modal h2 { font-size: 17px; }
+    .price-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ========== Responsive TABLE → CARD layout ========== */
+  /* Below 700px: My Leads & History tables become stacked cards */
+  @media (max-width: 700px) {
+    .my-leads-table table,
+    .history-table table { display: block; }
+    .my-leads-table thead,
+    .history-table thead { display: none; }
+    .my-leads-table tbody,
+    .history-table tbody { display: block; }
+    .my-leads-table tr,
+    .history-table tr {
+      display: block;
+      padding: 14px;
+      border-bottom: 1px solid var(--gray-100);
+      background: white;
+    }
+    .my-leads-table tr.pending-row { background: #FFFBEB; }
+    .my-leads-table tr:hover td,
+    .history-table tr:hover td { background: transparent; }
+    .my-leads-table td,
+    .history-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 6px 0;
+      border: none;
+      font-size: 13px;
+    }
+    .my-leads-table td::before,
+    .history-table td::before {
+      content: attr(data-label);
+      font-size: 10px;
+      color: var(--gray-500);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+      padding-top: 2px;
+      min-width: 70px;
+    }
+    .my-leads-table td:first-child {
+      border-bottom: 1px solid var(--gray-100);
+      padding-bottom: 10px;
+      margin-bottom: 6px;
+    }
+    .my-leads-table td:first-child::before { display: none; }
+    .my-leads-table td:first-child { display: block; }
+    .my-leads-table td:last-child {
+      padding-top: 10px;
+      margin-top: 4px;
+      border-top: 1px solid var(--gray-100);
+    }
+    .my-leads-table td:last-child::before { display: none; }
+    .my-leads-table td:last-child { display: block; }
+    .my-leads-table td:last-child .btn { width: 100%; padding: 9px 14px; }
+  }
+
+  /* Touch-friendly tweaks */
+  @media (hover: none) and (pointer: coarse) {
+    .lead-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+    .price-card:hover { transform: none; }
+    .btn-primary:hover { transform: none; }
   }
 
 </style>
@@ -504,7 +615,7 @@
         <div class="page-subtitle">All transactions on your account</div>
       </div>
     </div>
-    <div class="table-card">
+    <div class="table-card history-table">
       <table>
         <thead><tr><th>Date</th><th>Action</th><th>Change</th><th>Balance</th></tr></thead>
         <tbody id="historyBody"></tbody>
@@ -1223,16 +1334,16 @@ function renderMyLeads() {
     const statusPill = isPending
       ? `<span class="status-pill" style="background:var(--warning-soft);color:#92400E;">⏳ Under review</span>`
       : `<span class="status-pill status-${U.status}">${U.status}</span>`;
-    return `<tr${isPending ? ' style="background:#FFFBEB;"' : ''}>
-      <td><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:11px;color:var(--gray-500);">${escapeHtml(L.niche)}</span></td>
-      <td>${escapeHtml(L.city || "")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</td>
-      <td>${escapeHtml(L.phone || "—")}</td>
-      <td>${escapeHtml(L.email || "—")}</td>
-      <td>${statusPill}</td>
-      <td><button class="btn btn-outline" style="max-width:90px;padding:6px 12px;font-size:12px;" onclick="openDetail('${L.id}')">Open</button></td>
+    return `<tr${isPending ? ' class="pending-row"' : ''}>
+      <td data-label="Business"><strong>${escapeHtml(L.name)}</strong><br><span style="font-size:11px;color:var(--gray-500);">${escapeHtml(L.niche)}</span></td>
+      <td data-label="Location">${escapeHtml(L.city || "—")}${L.countryName ? ", " + escapeHtml(L.countryName) : ""}</td>
+      <td data-label="Phone">${escapeHtml(L.phone || "—")}</td>
+      <td data-label="Email">${escapeHtml(L.email || "—")}</td>
+      <td data-label="Status">${statusPill}</td>
+      <td data-label="Action"><button class="btn btn-outline" style="padding:6px 14px;font-size:12px;" onclick="openDetail('${L.id}')">Open lead</button></td>
     </tr>`;
   }).join("");
-  wrap.innerHTML = `<div class="table-card"><table><thead><tr><th>Business</th><th>Location</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  wrap.innerHTML = `<div class="table-card my-leads-table"><table><thead><tr><th>Business</th><th>Location</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderHistory() {
@@ -1243,10 +1354,10 @@ function renderHistory() {
   }
   tbody.innerHTML = STATE.history.map(h => `
     <tr>
-      <td style="font-size:12px;color:var(--gray-500);font-variant-numeric:tabular-nums;">${h.date}</td>
-      <td>${escapeHtml(h.action)}</td>
-      <td style="font-weight:700;color:${h.delta > 0 ? "var(--success)" : h.delta < 0 ? "var(--danger)" : "var(--gray-500)"};font-variant-numeric:tabular-nums;">${h.delta > 0 ? "+" : ""}${h.delta || "—"}</td>
-      <td style="font-variant-numeric:tabular-nums;font-weight:600;">${h.balance}</td>
+      <td data-label="Date" style="font-size:12px;color:var(--gray-500);font-variant-numeric:tabular-nums;">${h.date}</td>
+      <td data-label="Action">${escapeHtml(h.action)}</td>
+      <td data-label="Change" style="font-weight:700;color:${h.delta > 0 ? "var(--success)" : h.delta < 0 ? "var(--danger)" : "var(--gray-500)"};font-variant-numeric:tabular-nums;">${h.delta > 0 ? "+" : ""}${h.delta || "—"}</td>
+      <td data-label="Balance" style="font-variant-numeric:tabular-nums;font-weight:600;">${h.balance}</td>
     </tr>
   `).join("");
 }
