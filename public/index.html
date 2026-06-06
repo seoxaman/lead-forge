@@ -24,6 +24,9 @@
   .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; transition: color 0.15s; }
   .nav-links a:hover { color: var(--primary); }
   .nav-right { display: flex; gap: 10px; align-items: center; }
+  .nav-toggle { display: none; background: none; border: 1px solid var(--border); width: 38px; height: 38px; border-radius: 8px; cursor: pointer; color: var(--text); align-items: center; justify-content: center; padding: 0; }
+  .nav-toggle svg { width: 18px; height: 18px; }
+  .nav-toggle:hover { background: #F3F4F6; }
   .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
   .btn-ghost { background: transparent; color: var(--text); }
   .btn-ghost:hover { background: #F3F4F6; }
@@ -51,7 +54,9 @@
   .trust { margin-top: 28px; font-size: 13px; color: var(--muted); }
   .trust strong { color: var(--text); }
 
-  @media (max-width: 700px) { .hero h1 { font-size: 36px; } .hero p.subhead { font-size: 17px; } }
+  @media (max-width: 900px) { .hero h1 { font-size: 44px; } }
+  @media (max-width: 700px) { .hero { padding: 50px 20px 40px; } .hero h1 { font-size: 32px; line-height: 1.15; } .hero p.subhead { font-size: 15px; } .hero-ctas { flex-direction: column; align-items: stretch; } .hero-ctas .btn { width: 100%; } .badge { font-size: 11px; } }
+  @media (max-width: 480px) { .hero h1 { font-size: 27px; } .hero p.subhead { font-size: 14px; } }
 
   /* ===== Hero preview card ===== */
   .preview {
@@ -164,23 +169,144 @@
   .footer-links { display: flex; gap: 26px; justify-content: center; margin-bottom: 28px; font-size: 14px; flex-wrap: wrap; }
   .footer-links a:hover { color: white; }
   .footer-copy { font-size: 12px; color: rgba(255,255,255,0.4); }
+
+  /* ========== RESPONSIVE — MOBILE NAV ========== */
+  @media (max-width: 900px) {
+    .nav { padding: 12px 18px; flex-wrap: wrap; }
+    .nav-links { display: none; position: fixed; top: 60px; left: 0; right: 0; background: white; flex-direction: column; padding: 16px 20px; gap: 4px; border-bottom: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.06); z-index: 49; align-items: stretch; }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 12px 8px; font-size: 15px; color: var(--text); border-bottom: 1px solid #F3F4F6; font-weight: 500; }
+    .nav-links a:last-child { border-bottom: none; }
+    .nav-toggle { display: flex; order: 3; margin-left: 6px; }
+    .nav-right { gap: 6px; }
+    .nav-right .btn { padding: 8px 12px; font-size: 13px; }
+  }
+
+  @media (max-width: 520px) {
+    .logo { font-size: 18px; }
+    .nav-right .btn-ghost { display: none; }
+    .nav-right { gap: 4px; }
+  }
+
+  /* ========== RESPONSIVE — STATS ========== */
+  @media (max-width: 700px) {
+    .stats { padding: 36px 0; }
+    .stats-grid { gap: 18px; }
+    .stat-num { font-size: 28px; }
+    .stat-label { font-size: 12px; }
+  }
+
+  /* ========== RESPONSIVE — SECTION SPACING ========== */
+  @media (max-width: 700px) {
+    section { padding: 50px 0; }
+    .container { padding: 0 20px; }
+    .section-tag { font-size: 11px; }
+    .section-title { margin-bottom: 32px; }
+  }
+
+  /* ========== RESPONSIVE — PREVIEW CARD ========== */
+  @media (max-width: 700px) {
+    .preview { margin-top: 32px; border-radius: 12px; }
+    .preview-body { padding: 16px; }
+    .preview-filters { gap: 5px; }
+    .filter-chip { padding: 4px 10px; font-size: 11px; }
+    .preview-count { font-size: 11px; width: 100%; margin-top: 4px; margin-left: 0; }
+    .preview-lead { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .preview-lead-name { font-size: 14px; }
+    .preview-lead-meta { font-size: 11px; }
+    .preview-unlock { width: 100%; text-align: center; padding: 9px; }
+    .preview-top { padding: 10px 14px; }
+    .preview-url { font-size: 11px; padding: 3px 10px; }
+  }
+
+  /* ========== RESPONSIVE — FEATURES & STEPS ========== */
+  @media (max-width: 700px) {
+    .feature-card { padding: 22px 18px; }
+    .feature-icon { width: 38px; height: 38px; font-size: 18px; }
+    .feature-card h3 { font-size: 16px; }
+    .step { padding: 16px; }
+    .step-num { width: 48px; height: 48px; font-size: 18px; }
+    .step h3 { font-size: 16px; }
+  }
+
+  /* ========== RESPONSIVE — PRICING ========== */
+  @media (max-width: 700px) {
+    .pricing-grid { gap: 14px; }
+    .price-card { padding: 22px 18px; }
+    .price-amount { font-size: 36px; }
+    .price-features li { font-size: 13px; }
+  }
+
+  /* ========== RESPONSIVE — TESTIMONIALS ========== */
+  @media (max-width: 700px) {
+    .test-card { padding: 20px; }
+    .test-quote { font-size: 14px; }
+  }
+
+  /* ========== RESPONSIVE — FAQ ========== */
+  @media (max-width: 700px) {
+    .faq-q { padding: 14px 16px; font-size: 14px; }
+    .faq-a { padding: 0 16px 16px; font-size: 13px; }
+  }
+
+  /* ========== RESPONSIVE — FINAL CTA ========== */
+  @media (max-width: 700px) {
+    .final-cta { padding: 50px 20px; }
+    .final-cta h2 { font-size: 26px; }
+    .final-cta p { font-size: 14px; }
+  }
+
+  @media (max-width: 480px) {
+    .final-cta h2 { font-size: 22px; line-height: 1.2; }
+  }
+
+  /* ========== RESPONSIVE — FOOTER ========== */
+  @media (max-width: 700px) {
+    footer { padding: 36px 20px 20px; }
+    .footer-links { gap: 16px; font-size: 13px; }
+  }
+
+  /* ========== TOUCH-FRIENDLY ========== */
+  @media (hover: none) and (pointer: coarse) {
+    .feature-card:hover { transform: none; box-shadow: none; }
+    .price-card:hover { transform: none; }
+    .btn:hover, .cta:hover { transform: none; }
+  }
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="logo">Lead<span>Forge</span></div>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#how">How It Works</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
+  <div class="nav-links" id="navLinks">
+    <a href="#features" onclick="closeMobileMenu()">Features</a>
+    <a href="#how" onclick="closeMobileMenu()">How It Works</a>
+    <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
+    <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
   </div>
   <div class="nav-right">
     <a href="/login" class="btn btn-ghost">Log In</a>
-    <a href="/signup" class="btn btn-primary">Get Started Free →</a>
+    <a href="/signup" class="btn btn-primary">Get Started →</a>
+    <button class="nav-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="menuIcon"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
   </div>
 </nav>
+
+<script>
+function toggleMobileMenu() {
+  const links = document.getElementById("navLinks");
+  const icon = document.getElementById("menuIcon");
+  const isOpen = links.classList.toggle("open");
+  icon.innerHTML = isOpen
+    ? '<path d="M18 6L6 18M6 6l12 12"/>'
+    : '<path d="M3 6h18M3 12h18M3 18h18"/>';
+}
+function closeMobileMenu() {
+  document.getElementById("navLinks").classList.remove("open");
+  document.getElementById("menuIcon").innerHTML = '<path d="M3 6h18M3 12h18M3 18h18"/>';
+}
+</script>
 
 <!-- ===== HERO ===== -->
 <section class="hero">
