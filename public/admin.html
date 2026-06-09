@@ -152,9 +152,24 @@
   .detail-row label { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
   .detail-row .val { color: var(--text); font-weight: 500; word-break: break-word; }
 
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: white; padding: 14px 22px; border-radius: 10px; font-weight: 600; transform: translateY(140%); transition: transform 0.25s; z-index: 200; }
-  .toast.show { transform: translateY(0); }
-  .toast.danger { background: var(--danger); }
+  /* Toast — completely removed from layout when not active. Bulletproof hide. */
+  .toast {
+    display: none !important;
+  }
+  .toast.show {
+    display: flex !important;
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--success); color: white;
+    padding: 14px 22px; border-radius: 10px; font-weight: 600;
+    z-index: 200; max-width: 360px;
+    align-items: center; gap: 8px;
+    animation: toastIn 0.25s ease-out;
+  }
+  .toast.show.danger { background: var(--danger); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
