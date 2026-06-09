@@ -168,10 +168,27 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // If already signed in, redirect to dashboard
+  const ADMIN_EMAILS = ["seoxaman@gmail.com"];
+
+  function getRedirectTarget() {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("redirect");
+    if (!r || r === "/" || !r.startsWith("/")) return "/dashboard";
+    return r;
+  }
+
+  function redirectAfterAuth(userEmail) {
+    const target = getRedirectTarget();
+    if (target.startsWith("/admin") && !ADMIN_EMAILS.includes(userEmail)) {
+      window.location.href = "/dashboard";
+    } else {
+      window.location.href = target;
+    }
+  }
+
   (async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) window.location.href = "/dashboard";
+    if (session) redirectAfterAuth(session.user.email);
   })();
 
   function showError(msg) {
@@ -236,7 +253,7 @@
       if (data.session) {
         // Auto signed in (email confirmation OFF in Supabase) — best UX
         showSuccess("✓ Welcome! Redirecting to dashboard...");
-        setTimeout(() => { window.location.href = "/dashboard"; }, 700);
+        setTimeout(() => { redirectAfterAuth(data.user.email); }, 700);
       } else {
         // Email confirmation required — user needs to verify via email link
         showSuccess("✓ Account created! Check your email (and spam folder) to verify, then sign in.");
