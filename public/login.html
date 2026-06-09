@@ -3,492 +3,247 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>LeadForge Admin — Bad Lead Reports</title>
+<title>Sign In — LeadForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // ===== SUPABASE CONFIG =====
-  const SUPABASE_URL = "https://wqzqzwswmflyuogdiprq.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
-  // ===== ADMIN EMAILS — only these can access this page =====
-  const ADMIN_EMAILS = ["seoxaman@gmail.com"];
-
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // ===== AUTH + ADMIN GUARD =====
-  (async () => {
-    try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) { window.location.href = "/login?redirect=/admin"; return; }
-      if (!ADMIN_EMAILS.includes(session.user.email)) {
-        document.body.innerHTML = `<div style="padding:80px 20px;text-align:center;font-family:system-ui;">
-          <h1 style="color:#DC2626;">🔒 Access denied</h1>
-          <p style="color:#6B7280;margin-top:12px;">Only admin emails can access this page. You're signed in as <strong>${session.user.email}</strong>.</p>
-          <p style="margin-top:24px;"><a href="/dashboard" style="color:#2E75B6;">← Back to dashboard</a></p>
-        </div>`;
-        return;
-      }
-      window.LF_USER = session.user;
-    } catch (err) {
-      window.location.href = "/login";
-    }
-  })();
-
-  async function lfLogout() {
-    await supabaseClient.auth.signOut();
-    window.location.href = "/";
-  }
-</script>
 <style>
   :root {
-    --primary: #1F4E79; --accent: #2E75B6; --light: #DEEBF6;
-    --bg: #F7F9FC; --card: #FFFFFF; --text: #1F1F1F; --muted: #6B7280;
-    --border: #E5E7EB; --success: #16A34A; --warning: #F59E0B;
-    --danger: #DC2626; --gold: #B7791F;
+    --primary: #1F4E79;
+    --accent: #2E75B6;
+    --text: #1F2937;
+    --muted: #6B7280;
+    --border: #D1D5DB;
+    --soft: #F9FAFB;
+    --success: #10B981;
+    --success-soft: #D1FAE5;
+    --danger: #EF4444;
+    --danger-soft: #FEE2E2;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  html, body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body { background: white; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
 
-  .nav { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; flex-shrink: 0; }
-  .logo .tag { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 11px; margin-left: 8px; font-weight: 700; }
-  .nav-right { display: flex; gap: 12px; align-items: center; font-size: 14px; }
-  .nav-right .back-link { color: white; text-decoration: none; font-weight: 600; opacity: 0.9; font-size: 13px; }
-  .nav-right .back-link:hover { opacity: 1; }
+  .top-nav { padding: 18px 24px; display: flex; justify-content: flex-end; }
+  .top-nav a { color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; }
+  .top-nav a strong { color: var(--primary); font-weight: 700; }
+  .top-nav a:hover strong { color: var(--accent); }
 
-  .admin-avatar { width: 36px; height: 36px; border-radius: 50%; background: white; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; border: none; transition: all 0.15s; }
-  .admin-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
-  .admin-dropdown { display: none; position: absolute; top: calc(100% + 12px); right: 0; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,0.18); padding: 6px; min-width: 240px; z-index: 60; animation: dropDown 0.15s ease-out; }
-  .admin-dropdown.open { display: block; }
-  @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  .admin-dropdown-info { padding: 10px 12px; border-bottom: 1px solid #F3F4F6; margin-bottom: 4px; }
-  .admin-dropdown-info .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }
-  .admin-dropdown-info .val { font-size: 13px; color: var(--text); font-weight: 500; word-break: break-all; }
-  .admin-dropdown-action { width: 100%; padding: 9px 12px; background: transparent; border: none; text-align: left; font-size: 13px; color: var(--text); cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 9px; font-weight: 500; font-family: inherit; text-decoration: none; }
-  .admin-dropdown-action:hover { background: #F9FAFB; }
-  .admin-dropdown-action svg { width: 14px; height: 14px; color: var(--muted); }
-  .admin-dropdown-action.danger:hover { background: #FEE2E2; color: var(--danger); }
-  .admin-dropdown-action.danger:hover svg { color: var(--danger); }
+  .container { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 24px 24px 60px; }
+  .auth-card { max-width: 440px; width: 100%; }
 
-  /* ===== Mobile responsive (admin) ===== */
-  @media (max-width: 700px) {
-    .nav { padding: 12px 14px; }
-    .logo { font-size: 16px; }
-    .logo .tag { font-size: 9px; padding: 2px 6px; margin-left: 6px; }
-    .nav-right { gap: 8px; }
-    .nav-right .back-link { font-size: 12px; }
-    .admin-avatar { width: 32px; height: 32px; font-size: 13px; }
-    .admin-dropdown { right: -8px; min-width: 220px; }
-    h1 { font-size: 22px !important; }
-    .container { padding: 20px 14px !important; }
-    .toolbar { padding: 10px 12px; gap: 8px; }
-    .toolbar select, .toolbar input { font-size: 12px; padding: 6px 10px; }
-    .toolbar input { min-width: 0; flex: 1; }
-    table thead { display: none; }
-    table tbody, table tr { display: block; }
-    table tr { background: white; border-bottom: 1px solid var(--border); padding: 14px; }
-    table td { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border: none; font-size: 12px; }
-    table td::before { content: attr(data-label); font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; min-width: 70px; flex-shrink: 0; padding-top: 2px; }
+  .brand { text-align: center; margin-bottom: 36px; }
+  .brand-logo { font-size: 38px; font-weight: 800; letter-spacing: -1.5px; color: var(--text); }
+  .brand-logo span { color: var(--accent); }
+  .brand-sub { margin-top: 10px; color: var(--muted); font-size: 15px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .form-group .label-row { display: flex; justify-content: space-between; align-items: center; }
+  .form-group .label-row a { font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500; }
+  .form-group .label-row a:hover { text-decoration: underline; }
+  .form-group input { width: 100%; padding: 13px 14px; border: 1px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; color: var(--text); background: white; transition: all 0.15s; }
+  .form-group input::placeholder { color: #9CA3AF; }
+  .form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.15); }
+
+  .password-wrap { position: relative; }
+  .password-wrap input { padding-right: 44px; }
+  .eye-toggle {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; cursor: pointer; padding: 6px;
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s; border-radius: 4px;
   }
+  .eye-toggle:hover { color: var(--text); }
+  .eye-toggle svg { width: 18px; height: 18px; }
 
-  .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
-
-  h1 { color: var(--text); font-size: 28px; margin-bottom: 6px; letter-spacing: -0.5px; }
-  .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-
-  .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
-  @media (max-width: 1000px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-  .stat-value { font-size: 26px; font-weight: 800; color: var(--primary); margin-top: 4px; letter-spacing: -0.5px; }
-  .stat-sub { font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 500; }
-  .stat.warn .stat-value { color: var(--warning); }
-  .stat.danger .stat-value { color: var(--danger); }
-  .stat.success .stat-value { color: var(--success); }
-
-  .toolbar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .toolbar select, .toolbar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: white; font-family: inherit; }
-  .toolbar input { min-width: 240px; }
-  .btn { padding: 8px 14px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; }
-  .btn-primary { background: var(--primary); color: white; }
-  .btn-primary:hover { background: #163C5E; }
-  .btn-ghost { background: white; border: 1px solid var(--border); color: var(--text); }
-  .btn-ghost:hover { background: var(--bg); }
-  .spacer { flex: 1; }
-
-  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { background: var(--bg); color: var(--primary); padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  tbody td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr:hover td { background: #FAFBFC; }
-  .lead-name { font-weight: 700; color: var(--primary); margin-bottom: 2px; }
-  .lead-sub { font-size: 11px; color: var(--muted); }
-  .reasons { display: flex; flex-wrap: wrap; gap: 4px; }
-  .reason-chip { background: #FEE2E2; color: var(--danger); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-  .status-pill { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; display: inline-block; }
-  .status-open { background: #FEF3C7; color: var(--gold); }
-  .status-verified { background: #D1FAE5; color: var(--success); }
-  .status-rejected { background: #E5E7EB; color: var(--muted); }
-  .actions { display: flex; gap: 6px; }
-  .action-btn { padding: 4px 10px; border-radius: 6px; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
-  .action-verify { background: var(--success); color: white; }
-  .action-reject { background: var(--muted); color: white; }
-  .action-view { background: var(--light); color: var(--primary); }
-
-  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
-  .empty h3 { color: var(--text); margin-bottom: 6px; }
-  .loading { padding: 60px; text-align: center; color: var(--muted); }
-  .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--light); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: middle; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Detail modal */
-  .modal-bg { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-  .modal-bg.active { display: flex; }
-  .modal { background: white; border-radius: 14px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 28px; position: relative; }
-  .modal h2 { color: var(--primary); margin-bottom: 8px; font-size: 22px; }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--muted); }
-  .detail-row { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .detail-row:last-child { border-bottom: none; }
-  .detail-row label { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-  .detail-row .val { color: var(--text); font-weight: 500; word-break: break-word; }
-
-  .toast {
-    position: fixed; bottom: 24px; right: 24px;
-    background: var(--success); color: white;
-    padding: 14px 22px; border-radius: 10px; font-weight: 600;
-    z-index: 200; max-width: 360px;
-    transform: translateY(calc(100% + 40px));
-    opacity: 0; pointer-events: none; visibility: hidden;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, visibility 0s linear 0.25s;
+  .btn-primary {
+    width: 100%; padding: 14px 16px; border-radius: 9px; border: none;
+    background: var(--primary); color: white;
+    font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.15s;
+    font-family: inherit; margin-top: 6px;
   }
-  .toast.show {
-    transform: translateY(0); opacity: 1; pointer-events: auto; visibility: visible;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, visibility 0s;
+  .btn-primary:hover { background: #163C5E; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .btn-google {
+    width: 100%; padding: 13px 16px; border-radius: 9px; border: 1px solid var(--border);
+    background: white; color: var(--text); font-weight: 600; font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 11px;
+    transition: all 0.15s; font-family: inherit;
   }
-  .toast.danger { background: var(--danger); }
+  .btn-google:hover { background: var(--soft); border-color: #9CA3AF; }
+  .btn-google svg { width: 19px; height: 19px; flex-shrink: 0; }
+
+  .error { background: var(--danger-soft); border: 1px solid var(--danger); color: #991B1B; padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 16px; display: none; line-height: 1.5; }
+  .error.show { display: block; }
+  .success { background: var(--success-soft); border: 1px solid var(--success); color: #065F46; padding: 11px 14px; border-radius: 9px; font-size: 13px; margin-bottom: 16px; display: none; line-height: 1.5; }
+  .success.show { display: block; }
+
+  @media (max-width: 520px) {
+    .top-nav { padding: 16px 16px; }
+    .container { padding: 16px 18px 40px; }
+    .brand-logo { font-size: 32px; }
+    .brand-sub { font-size: 14px; }
+    .brand { margin-bottom: 28px; }
+    .form-group input { padding: 12px 14px; font-size: 16px; }
+    .password-wrap input { padding-right: 44px; }
+    .btn-primary, .btn-google { padding: 13px 16px; font-size: 15px; }
+  }
 </style>
 </head>
 <body>
 
-<nav class="nav">
-  <div class="logo">Lead<span style="opacity:0.8;">Forge</span><span class="tag">ADMIN</span></div>
-  <div class="nav-right" style="position:relative;">
-    <a href="/dashboard" class="back-link">← Back to app</a>
-    <button class="admin-avatar" onclick="toggleAdminMenu(event)" title="Account">A</button>
-    <div class="admin-dropdown" id="adminDropdown">
-      <div class="admin-dropdown-info">
-        <div class="label">Signed in as</div>
-        <div class="val" id="adminEmail">—</div>
-      </div>
-      <a href="/dashboard" class="admin-dropdown-action">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l5-5 5 5"/><path d="M8 3v10"/></svg>
-        Dashboard
-      </a>
-      <button class="admin-dropdown-action danger" onclick="lfLogout()">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4V2H3v12h7v-2"/><path d="M7 8h7m-3-3l3 3-3 3"/></svg>
-        Sign out
-      </button>
-    </div>
-  </div>
-</nav>
-
-<script>
-function toggleAdminMenu(e) {
-  if (e) e.stopPropagation();
-  document.getElementById("adminDropdown").classList.toggle("open");
-}
-document.addEventListener("click", e => {
-  const dd = document.getElementById("adminDropdown");
-  const wrap = document.querySelector(".nav-right");
-  if (dd && wrap && !wrap.contains(e.target)) {
-    dd.classList.remove("open");
-  }
-});
-</script>
+<div class="top-nav">
+  <a href="/signup">Don't have an account? <strong>Sign up</strong></a>
+</div>
 
 <div class="container">
-  <h1>Bad Lead Reports</h1>
-  <p class="sub">All bad lead reports submitted by users. Mark as verified to refund logic, or reject if false claim.</p>
+  <div class="auth-card">
 
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat"><div class="stat-label">Total Reports</div><div class="stat-value" id="statTotal">—</div></div>
-    <div class="stat warn"><div class="stat-label">Open</div><div class="stat-value" id="statOpen">—</div></div>
-    <div class="stat success"><div class="stat-label">Verified</div><div class="stat-value" id="statVerified">—</div></div>
-    <div class="stat"><div class="stat-label">Rejected</div><div class="stat-value" id="statRejected">—</div></div>
-    <div class="stat"><div class="stat-label">Last 7 days</div><div class="stat-value" id="stat7day">—</div></div>
-  </div>
+    <div class="brand">
+      <a href="/" style="text-decoration:none;"><div class="brand-logo">Lead<span>Forge</span></div></a>
+      <div class="brand-sub">Welcome back</div>
+    </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <select id="filterStatus" onchange="applyFilters()">
-      <option value="">All statuses</option>
-      <option value="open">Open</option>
-      <option value="verified">Verified</option>
-      <option value="rejected">Rejected</option>
-    </select>
-    <select id="filterCountry" onchange="applyFilters()">
-      <option value="">All countries</option>
-    </select>
-    <input type="search" id="searchInput" placeholder="Search by email, business name..." oninput="applyFilters()" />
-    <div class="spacer"></div>
-    <button class="btn btn-ghost" onclick="loadReports()">🔄 Refresh</button>
-    <button class="btn btn-primary" onclick="exportCSV()">⬇ Export CSV</button>
-  </div>
+    <div id="errorBox" class="error"></div>
+    <div id="successBox" class="success"></div>
 
-  <!-- Table -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Reported</th>
-          <th>User</th>
-          <th>Business</th>
-          <th>Location</th>
-          <th>Reasons</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="reportsBody">
-        <tr><td colspan="7" class="loading"><span class="spinner"></span> Loading reports...</td></tr>
-      </tbody>
-    </table>
+    <form id="loginForm" onsubmit="handleEmailLogin(event)">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" required placeholder="you@example.com" autocomplete="email" />
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="password">Password</label>
+        </div>
+        <div class="password-wrap">
+          <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
+          <button type="button" class="eye-toggle" onclick="togglePassword('password', this)" tabindex="-1" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
+    </form>
+
+    <div class="divider">OR</div>
+
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
   </div>
 </div>
-
-<!-- Detail modal -->
-<div class="modal-bg" id="detailModal">
-  <div class="modal" id="detailContent"></div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-const STATE = {
-  reports: [],
-  filtered: [],
-  filters: { status: "", country: "", search: "" },
-};
+  // ===== SUPABASE CONFIG =====
+  const SUPABASE_URL = "https://wqzqzwswmflyuogdiprq.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxenF6d3N3bWZseXVvZ2RpcHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzgyNTMsImV4cCI6MjA5NjA1NDI1M30.hd8vVO1zYgycvfrim9GQjIhXtqAsGvKvoKjm0s8NfNY";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const REASON_LABELS = {
-  phone_invalid: "Bad phone",
-  has_website: "Has website",
-  closed: "Closed",
-  wrong_info: "Wrong info",
-  duplicate: "Duplicate",
-  other: "Other",
-};
+  // Admin emails — used to decide if user can redirect to /admin
+  const ADMIN_EMAILS = ["seoxaman@gmail.com"];
 
-function toast(msg, type = "") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "toast show " + type;
-  setTimeout(() => t.className = "toast " + type, 2500);
-}
-
-function escapeHtml(s) {
-  if (s == null) return "";
-  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-function timeAgo(ts) {
-  const m = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m} min ago`;
-  if (m < 1440) return `${Math.floor(m / 60)} hr ago`;
-  if (m < 10080) return `${Math.floor(m / 1440)}d ago`;
-  return new Date(ts).toLocaleDateString();
-}
-
-async function loadReports() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("bad_lead_reports")
-      .select("*")
-      .order("reported_at", { ascending: false })
-      .limit(500);
-    if (error) throw error;
-    STATE.reports = data || [];
-    populateCountryFilter();
-    updateStats();
-    applyFilters();
-  } catch (err) {
-    document.getElementById("reportsBody").innerHTML =
-      `<tr><td colspan="7" class="empty"><h3>Could not load reports</h3><p>${escapeHtml(err.message)}</p></td></tr>`;
+  // Get redirect target from URL — only allow safe paths
+  function getRedirectTarget() {
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("redirect");
+    // Default to /dashboard. Only allow /admin if user is admin (checked later)
+    if (!r || r === "/" || !r.startsWith("/")) return "/dashboard";
+    return r;
   }
-}
 
-function populateCountryFilter() {
-  const sel = document.getElementById("filterCountry");
-  const countries = [...new Set(STATE.reports.map(r => r.lead_country).filter(Boolean))].sort();
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All countries</option>' +
-    countries.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
-  sel.value = current;
-}
-
-function updateStats() {
-  const r = STATE.reports;
-  document.getElementById("statTotal").textContent = r.length;
-  document.getElementById("statOpen").textContent = r.filter(x => x.status === "open").length;
-  document.getElementById("statVerified").textContent = r.filter(x => x.status === "verified").length;
-  document.getElementById("statRejected").textContent = r.filter(x => x.status === "rejected").length;
-  const week = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  document.getElementById("stat7day").textContent = r.filter(x => new Date(x.reported_at).getTime() > week).length;
-}
-
-function applyFilters() {
-  STATE.filters.status = document.getElementById("filterStatus").value;
-  STATE.filters.country = document.getElementById("filterCountry").value;
-  STATE.filters.search = document.getElementById("searchInput").value.toLowerCase();
-
-  STATE.filtered = STATE.reports.filter(r => {
-    if (STATE.filters.status && r.status !== STATE.filters.status) return false;
-    if (STATE.filters.country && r.lead_country !== STATE.filters.country) return false;
-    if (STATE.filters.search) {
-      const s = STATE.filters.search;
-      const blob = `${r.user_email} ${r.lead_name} ${r.lead_city} ${r.lead_country} ${r.lead_phone} ${(r.notes || "")}`.toLowerCase();
-      if (!blob.includes(s)) return false;
+  function redirectAfterAuth(userEmail) {
+    const target = getRedirectTarget();
+    // If target is /admin but user isn't admin, fall back to /dashboard
+    if (target.startsWith("/admin") && !ADMIN_EMAILS.includes(userEmail)) {
+      window.location.href = "/dashboard";
+    } else {
+      window.location.href = target;
     }
-    return true;
-  });
-  renderTable();
-}
-
-function renderTable() {
-  const tbody = document.getElementById("reportsBody");
-  if (STATE.filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty"><h3>No reports found</h3><p>Try changing filters, or wait for users to submit reports.</p></td></tr>`;
-    return;
   }
-  tbody.innerHTML = STATE.filtered.map(r => `
-    <tr>
-      <td data-label="Reported">
-        <div style="font-weight:600;">${timeAgo(r.reported_at)}</div>
-        <div class="lead-sub">${new Date(r.reported_at).toLocaleDateString()}</div>
-      </td>
-      <td data-label="User"><div style="font-weight:600;font-size:12px;word-break:break-all;">${escapeHtml(r.user_email || "—")}</div></td>
-      <td data-label="Business">
-        <div class="lead-name">${escapeHtml(r.lead_name || "—")}</div>
-        <div class="lead-sub">${escapeHtml(r.lead_niche || "")}</div>
-        <div class="lead-sub" style="margin-top:4px;font-family:monospace;font-size:10px;">${escapeHtml((r.lead_phone || "—"))}</div>
-      </td>
-      <td data-label="Location">
-        <div>${escapeHtml(r.lead_city || "—")}</div>
-        <div class="lead-sub">${escapeHtml(r.lead_country || "")}</div>
-      </td>
-      <td data-label="Reasons">
-        <div class="reasons">
-          ${(r.reasons || []).map(rs => `<span class="reason-chip">${escapeHtml(REASON_LABELS[rs] || rs)}</span>`).join("")}
-        </div>
-        ${r.notes ? `<div class="lead-sub" style="margin-top:6px;font-style:italic;max-width:200px;">"${escapeHtml(r.notes.slice(0, 80))}${r.notes.length > 80 ? '...' : ''}"</div>` : ""}
-      </td>
-      <td data-label="Status"><span class="status-pill status-${r.status}">${r.status}</span></td>
-      <td data-label="Action">
-        <div class="actions">
-          <button class="action-btn action-view" onclick="openDetail('${r.id}')">View</button>
-          ${r.status === "open" ? `
-            <button class="action-btn action-verify" onclick="updateStatus('${r.id}', 'verified')">✓</button>
-            <button class="action-btn action-reject" onclick="updateStatus('${r.id}', 'rejected')">✕</button>
-          ` : ""}
-        </div>
-      </td>
-    </tr>
-  `).join("");
-}
 
-async function updateStatus(id, newStatus) {
-  try {
-    const { error } = await supabaseClient
-      .from("bad_lead_reports")
-      .update({ status: newStatus, reviewed_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) throw error;
-    // Update local state
-    const r = STATE.reports.find(x => x.id === id);
-    if (r) { r.status = newStatus; r.reviewed_at = new Date().toISOString(); }
-    updateStats();
-    applyFilters();
-    toast(`✓ Marked as ${newStatus}`);
-  } catch (err) {
-    toast("Failed: " + err.message, "danger");
+  // If already signed in, go straight to dashboard (or redirect target)
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) redirectAfterAuth(session.user.email);
+  })();
+
+  function showError(msg) {
+    const el = document.getElementById("errorBox");
+    el.textContent = msg;
+    el.classList.add("show");
+    document.getElementById("successBox").classList.remove("show");
   }
-}
-
-function openDetail(id) {
-  const r = STATE.reports.find(x => x.id === id);
-  if (!r) return;
-  document.getElementById("detailContent").innerHTML = `
-    <button class="modal-close" onclick="closeDetail()">×</button>
-    <h2>${escapeHtml(r.lead_name)}</h2>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">Reported by ${escapeHtml(r.user_email)} on ${new Date(r.reported_at).toLocaleString()}</p>
-
-    <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Report</h3>
-    <div class="detail-row"><label>Reasons</label><div class="val"><div class="reasons">${(r.reasons || []).map(rs => `<span class="reason-chip">${escapeHtml(REASON_LABELS[rs] || rs)}</span>`).join("")}</div></div></div>
-    <div class="detail-row"><label>Notes</label><div class="val">${escapeHtml(r.notes || "—")}</div></div>
-    <div class="detail-row"><label>Status</label><div class="val"><span class="status-pill status-${r.status}">${r.status}</span></div></div>
-
-    <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:24px 0 8px;">Lead snapshot</h3>
-    <div class="detail-row"><label>Niche</label><div class="val">${escapeHtml(r.lead_niche || "—")}</div></div>
-    <div class="detail-row"><label>Address</label><div class="val">${escapeHtml(r.lead_address || "—")}</div></div>
-    <div class="detail-row"><label>City / Country</label><div class="val">${escapeHtml(r.lead_city || "—")}, ${escapeHtml(r.lead_country || "—")}</div></div>
-    <div class="detail-row"><label>Phone</label><div class="val">${escapeHtml(r.lead_phone || "—")}</div></div>
-    <div class="detail-row"><label>Email</label><div class="val">${escapeHtml(r.lead_email || "—")}</div></div>
-    <div class="detail-row"><label>Rating / Reviews</label><div class="val">${r.lead_rating || "—"} ⭐ · ${r.lead_reviews || 0} reviews</div></div>
-    ${r.lead_gmb_url ? `<div class="detail-row"><label>GMB</label><div class="val"><a href="${escapeHtml(r.lead_gmb_url)}" target="_blank" style="color:var(--accent);">Open in Maps ↗</a></div></div>` : ""}
-
-    ${r.status === "open" ? `
-      <div style="display:flex;gap:10px;margin-top:24px;border-top:1px solid var(--border);padding-top:18px;">
-        <button class="btn btn-ghost" onclick="closeDetail()" style="flex:1;">Close</button>
-        <button class="action-btn action-reject" onclick="updateStatus('${r.id}', 'rejected');closeDetail();" style="flex:1;padding:10px;">✕ Reject</button>
-        <button class="action-btn action-verify" onclick="updateStatus('${r.id}', 'verified');closeDetail();" style="flex:1;padding:10px;">✓ Verify</button>
-      </div>
-    ` : ""}
-  `;
-  document.getElementById("detailModal").classList.add("active");
-}
-function closeDetail() {
-  document.getElementById("detailModal").classList.remove("active");
-}
-document.getElementById("detailModal").addEventListener("click", e => {
-  if (e.target.id === "detailModal") closeDetail();
-});
-
-function exportCSV() {
-  if (STATE.filtered.length === 0) { toast("No data to export", "danger"); return; }
-  const rows = [["Date", "User Email", "Business", "Niche", "City", "Country", "Phone", "Reasons", "Notes", "Status"]];
-  STATE.filtered.forEach(r => {
-    rows.push([
-      new Date(r.reported_at).toLocaleString(),
-      r.user_email || "",
-      r.lead_name || "",
-      r.lead_niche || "",
-      r.lead_city || "",
-      r.lead_country || "",
-      r.lead_phone || "",
-      (r.reasons || []).join("; "),
-      (r.notes || "").replace(/\n/g, " "),
-      r.status,
-    ]);
-  });
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `bad_lead_reports_${Date.now()}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast(`✓ Exported ${STATE.filtered.length} reports`);
-}
-
-// Init
-setTimeout(() => {
-  if (window.LF_USER) {
-    document.getElementById("adminEmail").textContent = window.LF_USER.email;
-    loadReports();
+  function showSuccess(msg) {
+    const el = document.getElementById("successBox");
+    el.textContent = msg;
+    el.classList.add("show");
+    document.getElementById("errorBox").classList.remove("show");
   }
-}, 500);
+  function clearMsgs() {
+    document.getElementById("errorBox").classList.remove("show");
+    document.getElementById("successBox").classList.remove("show");
+  }
+
+  function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const isHidden = field.type === "password";
+    field.type = isHidden ? "text" : "password";
+    btn.innerHTML = isHidden
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+
+  async function handleEmailLogin(e) {
+    e.preventDefault();
+    clearMsgs();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      showSuccess("✓ Signed in! Redirecting...");
+      setTimeout(() => { redirectAfterAuth(data.user.email); }, 500);
+    } catch (err) {
+      const msg = (err.message || "").toLowerCase();
+      if (msg.includes("email not confirmed")) {
+        showError("Email not verified. Check your inbox for the verification link, or contact support if it didn't arrive.");
+      } else if (msg.includes("invalid")) {
+        showError("Invalid email or password. Please try again.");
+      } else {
+        showError(err.message || "Could not sign in.");
+      }
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+    }
+  }
+
+  async function signInWithGoogle() {
+    clearMsgs();
+    try {
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + "/dashboard" },
+      });
+      if (error) throw error;
+    } catch (err) {
+      showError("Google sign-in failed: " + err.message);
+    }
+  }
 </script>
 </body>
 </html>
