@@ -276,31 +276,27 @@
   .status-replied { background: var(--warning-soft); color: #92400E; }
   .status-closed { background: var(--success-soft); color: #065F46; }
 
-  /* ===== Toast ===== */
+  /* ===== Toast — bulletproof hide (display:none when not active) ===== */
   .toast {
+    display: none !important;
+  }
+  .toast.show {
+    display: flex !important;
     position: fixed; bottom: 24px; right: 24px;
     background: var(--gray-900); color: white;
     padding: 12px 18px; border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
     font-weight: 600; font-size: 13px;
     z-index: 200; max-width: 360px;
-    display: flex; align-items: center; gap: 8px;
-    /* Fully hidden by default — fix for sliver bug */
-    transform: translateY(calc(100% + 40px));
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, visibility 0s linear 0.25s;
+    align-items: center; gap: 8px;
+    animation: toastIn 0.25s ease-out;
   }
-  .toast.show {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s, visibility 0s;
+  .toast.show.danger { background: var(--danger); }
+  .toast.show.success { background: var(--success); }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  .toast.danger { background: var(--danger); }
-  .toast.success { background: var(--success); }
 
   /* ===== Loading & Error ===== */
   .loading-state { display: flex; justify-content: center; align-items: center; padding: 60px; color: var(--gray-500); gap: 10px; font-size: 14px; grid-column: 1/-1; }
