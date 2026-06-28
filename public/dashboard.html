@@ -332,6 +332,56 @@
   .seq-preview .subj-line { color: var(--brand); font-weight: 700; margin-bottom: 8px; font-family: inherit; font-size: 13px; }
   .seq-body-edit { width: 100%; padding: 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: ui-monospace, SF Mono, monospace; line-height: 1.6; resize: vertical; min-height: 200px; }
 
+  /* ===== Send Message Modal — Pro UI ===== */
+  .profile-insight {
+    background: linear-gradient(135deg, var(--brand-soft), white);
+    border: 1px solid var(--brand-tint);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .profile-insight .icon { font-size: 18px; flex-shrink: 0; }
+  .profile-insight .text { color: var(--brand); font-weight: 500; line-height: 1.4; }
+
+  .channel-toggle {
+    display: flex; gap: 6px; background: var(--gray-100);
+    padding: 4px; border-radius: 10px; margin-bottom: 14px;
+  }
+  .channel-btn {
+    flex: 1; padding: 9px 14px; border: none; background: transparent;
+    color: var(--gray-600); font-weight: 600; font-size: 13px;
+    border-radius: 7px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-family: inherit;
+  }
+  .channel-btn:hover { color: var(--gray-900); }
+  .channel-btn.active { background: white; color: var(--brand); box-shadow: var(--shadow-sm); }
+  .channel-btn.active[data-channel="whatsapp"] { color: #25D366; }
+  .channel-btn svg { width: 14px; height: 14px; }
+
+  .variant-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 14px; background: var(--gray-50); border: 1px solid var(--gray-200);
+    border-radius: 10px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .variant-info { display: flex; flex-direction: column; gap: 2px; }
+  .variant-label { font-size: 11px; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .variant-label span { color: var(--brand); font-weight: 700; }
+  .variant-name { font-size: 14px; color: var(--gray-900); font-weight: 600; }
+  .variant-actions { display: flex; gap: 4px; }
+
+  .send-actions { display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid var(--gray-100); padding-top: 18px; flex-wrap: wrap; }
+  .send-actions .btn { flex: 1; min-width: 110px; padding: 11px 14px; font-size: 13px; }
+
+  /* WhatsApp channel-specific button color */
+  .channel-whatsapp .btn-solid#sendChannelBtn { background: #25D366; }
+  .channel-whatsapp .btn-solid#sendChannelBtn:hover { background: #1FAD52; }
+
+  @media (max-width: 600px) {
+    .variant-bar { flex-direction: column; align-items: stretch; }
+    .variant-actions { justify-content: space-between; }
+    .send-actions .btn { min-width: 100%; }
+  }
+
   @media (max-width: 600px) {
     .queue-item { flex-wrap: wrap; }
     .queue-actions { width: 100%; }
@@ -827,33 +877,65 @@
   </div>
 </div>
 
-<!-- ===== SEND EMAIL MODAL ===== -->
+<!-- ===== SEND MESSAGE MODAL (Email + WhatsApp + regenerate) ===== -->
 <div class="modal-bg" id="modal-sendEmail">
-  <div class="modal" style="max-width:680px;">
+  <div class="modal" style="max-width:720px;">
     <button class="modal-close" onclick="closeModal('sendEmail')">×</button>
-    <h2 id="sendEmailTitle">Send Email</h2>
-    <p class="sub" id="sendEmailSub">Personalized for your lead.</p>
+    <h2 id="sendEmailTitle">Send Message</h2>
+    <p class="sub" id="sendEmailSub"></p>
 
+    <!-- Profile insight panel -->
+    <div class="profile-insight" id="profileInsight"></div>
+
+    <!-- Channel toggle -->
+    <div class="channel-toggle">
+      <button class="channel-btn active" data-channel="email" onclick="switchChannel('email')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 5l6 4 6-4"/></svg>
+        Email
+      </button>
+      <button class="channel-btn" data-channel="whatsapp" onclick="switchChannel('whatsapp')">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.6 0 0 3.6 0 8c0 1.4.4 2.7 1 3.9L0 16l4.2-1c1.1.6 2.4 1 3.8 1 4.4 0 8-3.6 8-8s-3.6-8-8-8zm4.6 11.3c-.2.5-1.1 1-1.6 1-.4.1-.9.1-1.4 0-.3-.1-.7-.2-1.3-.5-2.2-1-3.7-3.3-3.8-3.4-.1-.2-.9-1.3-.9-2.4 0-1.2.6-1.7.8-1.9.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .5.4l.7 1.7c.1.2 0 .4-.1.5-.1.2-.2.3-.4.5-.1.1-.3.3-.1.5.1.2.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4.1.5-.1.1-.2.6-.7.8-.9.2-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.2.1.6 0 1z"/></svg>
+        WhatsApp
+      </button>
+    </div>
+
+    <!-- Variant selector + regenerate -->
+    <div class="variant-bar">
+      <div class="variant-info">
+        <div class="variant-label">Variant <span id="variantNum">1</span> of <span id="variantTotal">10</span></div>
+        <div class="variant-name" id="variantName">—</div>
+      </div>
+      <div class="variant-actions">
+        <button class="seq-mini-btn" onclick="prevVariant()" title="Previous variant">◀</button>
+        <button class="seq-mini-btn" onclick="regenerateVariant()" title="Random variant">🔄 Regenerate</button>
+        <button class="seq-mini-btn" onclick="nextVariant()" title="Next variant">▶</button>
+      </div>
+    </div>
+
+    <!-- Recipient -->
     <div class="form-group">
-      <label class="form-label">To</label>
+      <label class="form-label" id="recipientLabel">To (Email)</label>
       <input type="text" class="input" id="sendEmailTo" readonly />
     </div>
 
-    <div class="form-group">
+    <!-- Subject (only for email) -->
+    <div class="form-group" id="subjectGroup">
       <label class="form-label">Subject</label>
       <input type="text" class="input" id="sendEmailSubject" />
     </div>
 
+    <!-- Body -->
     <div class="form-group">
-      <label class="form-label">Body (edit as needed)</label>
+      <label class="form-label">Message (edit freely before sending)</label>
       <textarea id="sendEmailBody" rows="10" class="seq-body-edit"></textarea>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:18px;border-top:1px solid var(--gray-100);padding-top:18px;flex-wrap:wrap;">
-      <button class="btn btn-ghost" onclick="closeModal('sendEmail')" style="flex:1;min-width:100px;">Cancel</button>
-      <button class="btn btn-outline" onclick="copySendEmail()" style="flex:1;min-width:120px;">📋 Copy</button>
-      <button class="btn btn-solid" onclick="sendViaGmail()" style="flex:2;min-width:160px;">📧 Send via Email</button>
-      <button class="btn btn-solid" onclick="markAsSent()" style="flex:2;min-width:160px;background:var(--success);">✓ Mark as Sent</button>
+    <!-- Actions -->
+    <div class="send-actions">
+      <button class="btn btn-ghost" onclick="closeModal('sendEmail')">Cancel</button>
+      <button class="btn btn-outline" onclick="copySendEmail()">📋 Copy</button>
+      <button class="btn btn-solid" id="sendChannelBtn" onclick="sendViaChannel()">📧 Send via Email</button>
+      <button class="btn btn-solid" onclick="markAsSent()" style="background:var(--success);">✓ Mark as Sent</button>
     </div>
   </div>
 </div>
@@ -1588,9 +1670,322 @@ function renderHistory() {
 // ===== OUTREACH SEQUENCER =====
 // ========================================================================
 
-// Email templates by niche — 4-email sequences, sent at Day 0/3/7/14
-const OUTREACH_TEMPLATES = {
-  "restaurant_friendly": {
+// ===== PROFESSIONAL TEMPLATE LIBRARY =====
+// 5 niches × 10 variants × (email + whatsapp). Profile-aware tone.
+
+const NICHE_TEMPLATES = {
+  restaurant: {
+    name: "Restaurant / Cafe / Food",
+    icon: "🍽️",
+    keywords: ["restaurant", "cafe", "bakery", "pizza", "food", "bar", "pub", "catering", "diner"],
+    variants: [
+      { name: "Friendly Praise", tone: "friendly",
+        emailSubject: "Loved your reviews, {{business_name}} 🍽️",
+        emailBody: "Hi there,\n\nI was browsing Google for great food in {{city}} and {{business_name}} kept popping up — {{rating}} stars across {{reviews_count}} reviews! Clearly your kitchen is doing something right.\n\nWith all that love, I'm honestly surprised you don't have a website yet. About 47% of people Google a restaurant before deciding to visit — and without a site, you're invisible at that exact moment.\n\nI build clean, modern restaurant websites (menu, photos, hours, online booking). Usually live within a week, one-time fee from $399.\n\nWorth a 10-min chat?\n\n— {{my_name}}",
+        wa: "Hey 👋 was searching for great food in {{city}} and saw {{business_name}} — {{rating}} stars is awesome! 🤩\n\nNoticed you don't have a website though. I build simple ones for restaurants (menu, photos, hours, online orders). Live in 7 days, one-time fee.\n\nWorth a quick chat?\n\n— {{my_name}}" },
+
+      { name: "Lost Customers", tone: "direct",
+        emailSubject: "How many orders is {{business_name}} losing weekly?",
+        emailBody: "Hi {{owner_first_name}},\n\nQuick question — how often does someone call {{business_name}} just to ask 'what's on the menu?' or 'are you open?' My guess: 5-10 times a day.\n\nThose aren't customers. Those are interruptions stealing time from your real customers.\n\nA simple website fixes this overnight. 24/7 menu, hours, contact, online ordering.\n\nYou already have {{reviews_count}} reviews — people clearly want to find you. Let's make it easy.\n\n5-min call this week?\n\n— {{my_name}}",
+        wa: "Hi! Quick Q — how many times a day someone calls {{business_name}} asking menu/hours? 😅\n\nA website fixes that forever. You've got {{reviews_count}} reviews already so customers want to find you — let me build you one.\n\n— {{my_name}}" },
+
+      { name: "Casual / Funny", tone: "casual",
+        emailSubject: "Sooo... {{business_name}} doesn't have a website? 👀",
+        emailBody: "Hey {{owner_first_name}}!\n\nFood looks fire 🔥 — {{rating}} stars across {{reviews_count}} reviews don't lie. But no website?? In 2026?? Even my grandma has a website 😅\n\nJokes aside — I build clean, modern restaurant sites. Menu, photos, online ordering, contact info. Done in a week. Won't break the bank.\n\nWanna chat? Or even just see a mockup of what yours could look like?\n\n— {{my_name}}",
+        wa: "Yo {{business_name}} food looks 🔥🔥🔥 but no website?? In 2026?? 😱\n\nLet me fix that. Simple, modern, done in a week. You've earned it with those {{reviews_count}} reviews 🙌\n\nReply for details!\n\n— {{my_name}}" },
+
+      { name: "Personal Story", tone: "story",
+        emailSubject: "How I found {{business_name}} (and almost missed it)",
+        emailBody: "Hi {{owner_first_name}},\n\nLast week I searched 'best {{niche}} in {{city}}' on Google. Saw {{business_name}}. Wanted to peek at the menu, see some food pics, check if you're open.\n\nNo website. Closed your tab. Ended up at a competitor.\n\nHere's the thing — this probably happens to you 30-50 times a week. People interested in trying you, but they bounce because they can't find basic info.\n\nI build websites for restaurants. Let me fix this for {{business_name}} — quick chat?\n\n— {{my_name}}",
+        wa: "Hi 👋 Real story — searched 'best {{niche}} {{city}}' last week, saw {{business_name}}, no website, went to competitor instead 😬\n\nThat probably happens to you 30+ times a week. Want me to build you a site? Quick + cheap.\n\n— {{my_name}}" },
+
+      { name: "Data Driven", tone: "professional",
+        emailSubject: "Restaurants with websites grow 2.5x faster",
+        emailBody: "Hi {{owner_first_name}},\n\nA 2024 industry report found {{niche}}s with websites generate 2.5x more revenue growth than those without — purely from improved discoverability.\n\n{{business_name}} has {{rating}}-star reviews from {{reviews_count}} customers, which puts you in the top 20% of {{city}} {{niche}}s for reputation. Imagine pairing that reputation with a proper website.\n\nI build websites specifically for restaurants. Setup: 5-7 days. One-time fee.\n\nMay I share a brief proposal tailored to {{business_name}}?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, quick stat — restaurants with websites grow 2.5x faster.\n\n{{business_name}} has top-20% reviews in {{city}} but no website. Massive opportunity. I can build one in 5-7 days. Interested?\n\n— {{my_name}}" },
+
+      { name: "Review Highlight", tone: "warm",
+        emailSubject: "Your reviews are insane 🤯",
+        emailBody: "Hi,\n\nJust spent 10 min reading {{business_name}}'s reviews on Google. People are RAVING — {{rating}} stars across {{reviews_count}} reviews is hard to fake.\n\nWith that demand, you're invisible to:\n• People searching '{{niche}} in {{city}}' on Google\n• Tourists looking for highly-rated spots\n• Locals trying to confirm hours/menu before visiting\n\nA website fixes all three. Let me build one for {{business_name}} this week.\n\n— {{my_name}}",
+        wa: "{{business_name}} reviews are insane 🤯 {{rating}} stars × {{reviews_count}} reviews!\n\nWithout a website you're invisible to tourists + new locals searching '{{niche}} {{city}}'. Want me to fix that this week?\n\n— {{my_name}}" },
+
+      { name: "Competitor Angle", tone: "direct",
+        emailSubject: "Your {{city}} competition has websites — you don't",
+        emailBody: "Hi {{owner_first_name}},\n\nI researched the top {{niche}}s in {{city}} today. 8 out of 10 have websites. {{business_name}} doesn't — even though your reviews ({{rating}} stars) outperform many of them.\n\nEvery Google search for '{{niche}} in {{city}}' that surfaces competitor sites = a customer who picks them over you.\n\nI can fix this. New website for {{business_name}} live within a week.\n\nQuick call?\n\n— {{my_name}}",
+        wa: "Hey {{owner_first_name}}, I checked top {{niche}}s in {{city}} — 8 out of 10 have websites. {{business_name}} doesn't, even though your reviews crush most of them.\n\nLet me build you one. Live in a week.\n\n— {{my_name}}" },
+
+      { name: "Peak Season Urgent", tone: "urgent",
+        emailSubject: "{{city}} weekend rush — are you ready?",
+        emailBody: "Hi,\n\nWeekends are peak season for {{niche}}s in {{city}}. Are you maximizing weekend bookings?\n\nWithout a website, every weekend Google search for {{business_name}} ends in frustration — no menu, no hours, no easy way to book a table or place an order.\n\nFast turnaround: I can have a website live for {{business_name}} in 5 days. That's in time for next weekend.\n\nReply with 'tell me more' to lock it in.\n\n— {{my_name}}",
+        wa: "Urgent ⏰ Weekend rush coming. Without a website {{business_name}} is missing tons of bookings + orders.\n\nI can have one live in 5 days — in time for next weekend. Reply 'go' to start.\n\n— {{my_name}}" },
+
+      { name: "Free Mockup", tone: "no-pressure",
+        emailSubject: "I sketched a website for {{business_name}} (free preview)",
+        emailBody: "Hi {{owner_first_name}},\n\nSpent 20 min designing a quick mockup of what {{business_name}}'s website could look like. Used your photos from Google, your brand vibe.\n\nWant me to send it over? Zero charge, zero commitment.\n\nIf you love it → we talk pricing.\nIf you don't → I'll never bother you again, promise.\n\nJust reply 'send it' and it's yours.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — sketched a quick website mockup for {{business_name}} 🎨 Free preview, no commitment.\n\nReply 'send it' and I'll fire it over!\n\n— {{my_name}}" },
+
+      { name: "Local Love", tone: "warm",
+        emailSubject: "{{city}} clearly loves {{business_name}} ❤️",
+        emailBody: "Hi {{owner_first_name}},\n\n{{city}} clearly loves what you do — {{reviews_count}} reviews and {{rating}} stars don't happen by accident.\n\nLet's bring that love online. A simple website helps:\n• New {{city}} residents discover you instantly\n• Loyal customers share your menu with friends\n• Tourists find you when they search 'best {{niche}} {{city}}'\n\nI build websites specifically for {{city}}-area {{niche}}s. Setup in 5-7 days, one-time fee.\n\nWant details?\n\n— {{my_name}}",
+        wa: "{{city}} loves {{business_name}} ❤️ {{reviews_count}} reviews don't lie!\n\nLet's bring that love online with a simple website. Helps locals share, tourists find, regulars book. Built in a week.\n\nInterested?\n\n— {{my_name}}" }
+    ]
+  },
+
+  dentist: {
+    name: "Medical / Dental / Health",
+    icon: "🏥",
+    keywords: ["dentist", "doctor", "chiropractor", "physiotherapist", "optometrist", "veterinarian", "pharmacy", "clinic", "medical"],
+    variants: [
+      { name: "Professional Intro", tone: "professional",
+        emailSubject: "{{business_name}} — patient acquisition opportunity",
+        emailBody: "Dear {{owner_first_name}},\n\n{{business_name}} has built an excellent reputation in {{city}} ({{rating}}-star average from {{reviews_count}} patients).\n\nHowever, without a website, you may be missing significant new patient inquiries. Industry data shows 73% of patients research medical practices online before booking.\n\nI specialize in clean, HIPAA-compliant websites for medical practices — featuring online booking, before/after galleries, and patient testimonials. Typical setup: 10 business days.\n\nMay I share a brief 2-minute video showcasing the type of site I'd build for {{business_name}}?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, {{business_name}} has excellent reviews in {{city}}.\n\nWithout a website, you're missing the 73% of patients who research online before booking. I build HIPAA-compliant sites with online booking in 10 days.\n\nMay I send a brief proposal?\n\nRegards, {{my_name}}" },
+
+      { name: "Stats Heavy", tone: "professional",
+        emailSubject: "73% of patients research online — {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\n2024 healthcare marketing data:\n• 73% of patients research practices online before booking\n• Practices with websites see 2.5x more new patient bookings\n• 68% of users abandon medical practices with no online presence\n\n{{business_name}} has built impressive trust ({{rating}} stars, {{reviews_count}} patients) yet is missing this entire patient acquisition channel.\n\nI build websites for medical practices. Quote and proposal in 24 hours, if interested.\n\nRegards,\n{{my_name}}",
+        wa: "{{business_name}} has {{rating}} stars in {{city}} 👏 But 73% of patients research online before booking — and you have no website. Big gap.\n\nI build medical sites with online booking. Proposal in 24h. Interested?\n\n— {{my_name}}" },
+
+      { name: "Patient Booking Focus", tone: "professional",
+        emailSubject: "Online booking for {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nA quick observation: {{business_name}} has {{reviews_count}} reviews — strong demand. But without a website with online booking, every new patient inquiry requires phone call + receptionist time + scheduling back-and-forth.\n\nI build medical websites with integrated online booking (compatible with most practice management systems). Patients book themselves; you save 5-10 hours of admin per week.\n\nWorth a brief discussion?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, every new patient call = receptionist time + back-and-forth. Online booking solves this.\n\n{{business_name}} has the demand ({{reviews_count}} reviews!) — let me add the booking infrastructure. 5-10 hrs/week admin saved.\n\n— {{my_name}}" },
+
+      { name: "Competitive Edge", tone: "direct",
+        emailSubject: "Your {{city}} competition has websites",
+        emailBody: "Dear {{owner_first_name}},\n\nI reviewed top {{niche}}s in {{city}} this week. Most competitors have professional websites with online booking. {{business_name}} doesn't — despite outperforming many of them in reviews ({{rating}} stars).\n\nThis is a competitive gap. Patients comparing practices choose those they can easily research and book online.\n\nI can close this gap for {{business_name}} in 10 business days.\n\nMay we schedule a brief call?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, your {{city}} competition has websites — you don't. Despite your superior reviews ({{rating}} stars).\n\nPatients pick practices they can research + book online. I can close this gap in 10 days.\n\n— {{my_name}}" },
+
+      { name: "Trust + Authority", tone: "warm-professional",
+        emailSubject: "Showcasing {{business_name}}'s expertise online",
+        emailBody: "Dear {{owner_first_name}},\n\n{{business_name}}'s reviews demonstrate exceptional patient care ({{rating}} stars across {{reviews_count}} reviews). However, this trust currently lives only on Google Maps — not on a platform you control.\n\nA professional website lets you:\n• Showcase your credentials, services, and team\n• Display patient testimonials and before/after work\n• Capture new inquiries 24/7\n• Build authority via blog/health tips\n\nI build websites for healthcare practices. Setup: 10 days, one-time fee.\n\nInterested in a brief proposal?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, your {{rating}}-star reviews show trust — but it lives on Google, not on a site you control.\n\nLet's showcase {{business_name}}'s expertise properly. Site in 10 days. Proposal?\n\n— {{my_name}}" },
+
+      { name: "Free Mockup", tone: "no-pressure",
+        emailSubject: "Custom website mockup for {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nI created a custom website mockup for {{business_name}} — designed specifically for medical practices, with online booking, services overview, and patient testimonials.\n\nWould you like me to send it for your review? No cost, no commitment.\n\nA brief reply with 'Yes, send mockup' is all that's needed.\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, prepared a custom website mockup for {{business_name}}. Online booking, services, testimonials — all included.\n\nReply 'send mockup' and I'll share it. No commitment.\n\n— {{my_name}}" },
+
+      { name: "Quick + Affordable", tone: "direct",
+        emailSubject: "Affordable website for {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nA professional website for a medical practice doesn't need to cost thousands. I build clean, HIPAA-compliant sites for {{niche}}s starting at $699 — typical setup in 10 business days.\n\n{{business_name}}'s reputation ({{rating}} stars, {{reviews_count}} reviews) deserves this investment.\n\nWould you like a detailed quote?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, professional website for {{business_name}} from $699. 10-day setup, HIPAA-compliant, online booking.\n\nQuote in 24h if interested?\n\n— {{my_name}}" },
+
+      { name: "Patient Experience", tone: "warm-professional",
+        emailSubject: "Improving the patient experience at {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nModern patients expect to research, book, and prep for medical appointments online. {{business_name}} has earned exceptional reviews ({{rating}} stars) — but the patient journey starts on Google before they ever reach your office.\n\nWithout a website, that first impression is missing. Patients often choose the practice with clearer online presence, even if reviews are weaker.\n\nLet me build {{business_name}} a website that matches your in-person reputation. 10 business days.\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, modern patients research online before booking. {{business_name}}'s in-person reputation is excellent — let's match it online.\n\n10-day setup, HIPAA-compliant. Proposal?\n\n— {{my_name}}" },
+
+      { name: "Specific Service Pain", tone: "professional",
+        emailSubject: "Reducing no-shows at {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nA common challenge for {{niche}}s: appointment no-shows costing thousands monthly. A website with online booking + automated reminders typically reduces no-shows by 30-40%.\n\n{{business_name}} could benefit immediately. I build websites with integrated reminder systems for medical practices.\n\nMay I share details?\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, no-shows costing {{business_name}} thousands monthly? Website + auto reminders typically cuts no-shows 30-40%.\n\nLet me build the system. Details?\n\n— {{my_name}}" },
+
+      { name: "Final Soft Touch", tone: "warm-professional",
+        emailSubject: "Closing the loop — {{business_name}}",
+        emailBody: "Dear {{owner_first_name}},\n\nThis is my final follow-up on building a website for {{business_name}}.\n\nIf the timing isn't right, I completely understand. Should you decide to explore an online presence in the future, my offer stands.\n\nWishing your practice continued success in {{city}}.\n\nRegards,\n{{my_name}}",
+        wa: "Dear {{owner_first_name}}, final note from me. If you ever want to explore a website for {{business_name}}, I'm here.\n\nWishing your practice continued success.\n\n— {{my_name}}" }
+    ]
+  },
+
+  service: {
+    name: "Service / Trades / Local",
+    icon: "🔧",
+    keywords: ["plumber", "electrician", "hvac", "roofer", "painter", "carpenter", "handyman", "locksmith", "auto", "mechanic", "cleaning", "pest", "moving"],
+    variants: [
+      { name: "Direct Call", tone: "direct",
+        emailSubject: "Quick Q for {{business_name}}",
+        emailBody: "Hey {{owner_first_name}},\n\nSaw {{business_name}} on Google — {{rating}} stars, {{reviews_count}} reviews. Solid work in {{city}}.\n\nQuick question: how are you getting most of your jobs right now? Word of mouth?\n\nI ask because without a website, you're missing the people who Google '{{niche}} near me' at 11pm with an emergency. That's 60% of urgent local searches.\n\nI build no-nonsense websites for trades — $499 flat, live in 5 days, with quote forms and call buttons.\n\nWorth a 5-min chat?\n\n— {{my_name}}",
+        wa: "Hey {{owner_first_name}}, saw {{business_name}} on Google ({{rating}}⭐ × {{reviews_count}}) — solid work!\n\nHow you getting most jobs? Word of mouth? Cos without a website you're missing emergency searches at 11pm — 60% of urgent calls. I can fix that for $499, 5 days.\n\n— {{my_name}}" },
+
+      { name: "Emergency Jobs", tone: "urgent",
+        emailSubject: "{{business_name}} — missing emergency calls?",
+        emailBody: "Hi {{owner_first_name}},\n\n{{niche}} emergencies don't happen during business hours — pipes burst at 2am, AC dies on weekends, lights flicker on holidays.\n\nWhen those panicked customers Google '24/7 {{niche}} {{city}}', do they find {{business_name}}? Without a website — no.\n\nI build websites for trades that capture those emergency calls. Click-to-call buttons, quote forms, service area maps. $499 flat. Live in 5 days.\n\nInterested?\n\n— {{my_name}}",
+        wa: "{{niche}} emergencies = burst pipes at 2am, dead AC on weekends. Customer Googles '24/7 {{niche}} {{city}}' — does {{business_name}} show up? Without site, no.\n\nI build emergency-capture sites. $499. 5 days. In?\n\n— {{my_name}}" },
+
+      { name: "Lost Revenue Calculator", tone: "direct",
+        emailSubject: "How much is {{business_name}} losing per month?",
+        emailBody: "Hi {{owner_first_name}},\n\nSimple math:\n• {{city}} has ~2000 Google searches/month for '{{niche}}'\n• Without a website, you capture maybe 5% via map listings\n• Avg job value for {{niche}}: $200-500\n• You're losing roughly 50-100 jobs/month to competitors\n\nThat's potentially $10,000-50,000 monthly walking to other {{niche}}s.\n\nI build websites for trades that capture these searches. $499 one-time. 5-day setup.\n\nReady to talk?\n\n— {{my_name}}",
+        wa: "Math for {{business_name}}: ~2000 Google searches/month for '{{niche}}' in {{city}}. You capture maybe 5% without a website = $10K-50K/month walking to competitors 😬\n\n$499 fixes it. Interested?\n\n— {{my_name}}" },
+
+      { name: "Trust + Reviews", tone: "warm",
+        emailSubject: "Your {{rating}} stars deserve more visibility",
+        emailBody: "Hi {{owner_first_name}},\n\n{{rating}} stars from {{reviews_count}} reviews is impressive — that's the kind of reputation most {{niche}}s would kill for.\n\nBut here's the thing: those reviews only help people who already find {{business_name}} on Google Maps. They don't help the thousands searching '{{niche}} {{city}}' on Google search itself, where ranking favors sites.\n\nA simple website unlocks that traffic. $499 flat. Live in 5 days. Includes click-to-call and quote forms.\n\nWorth a chat?\n\n— {{my_name}}",
+        wa: "{{rating}} stars × {{reviews_count}} reviews 💪 But that only helps people who find {{business_name}} on Maps. Thousands searching '{{niche}} {{city}}' on Google miss you.\n\nWebsite fixes that. $499, 5 days.\n\n— {{my_name}}" },
+
+      { name: "Competitor Quote", tone: "competitive",
+        emailSubject: "Your competitors are getting your calls",
+        emailBody: "Hey {{owner_first_name}},\n\nI checked the top 5 {{niche}}s in {{city}} today. 4 out of 5 have websites. Their average rating: {{rating}}+ Most are taking calls {{business_name}} should be getting.\n\nHere's the cruel part: you have {{reviews_count}} reviews — that's better than half of them. You're just invisible at the search stage.\n\nLet me build {{business_name}} a website. Same level as competitors. $499 one-time. 5 days.\n\nWorth fixing?\n\n— {{my_name}}",
+        wa: "Checked top 5 {{niche}}s in {{city}}: 4 out of 5 have websites. You have better reviews than half of them but you're invisible.\n\nLet me build {{business_name}} a site. $499. 5 days. Same level as competitors.\n\n— {{my_name}}" },
+
+      { name: "Casual Approach", tone: "casual",
+        emailSubject: "{{business_name}} — quick idea",
+        emailBody: "Hey {{owner_first_name}},\n\nQuick one — I help {{niche}}s in {{city}} get more jobs via simple websites. Saw {{business_name}} doesn't have one yet.\n\nFlat $499, includes:\n• Click-to-call button (calls go to your phone)\n• Quote request form\n• Service area + reviews\n• Mobile-optimized\n\nLive in 5 days. Want to chat?\n\n— {{my_name}}",
+        wa: "Hey {{owner_first_name}} — I build websites for {{niche}}s. Saw {{business_name}} doesn't have one.\n\n$499 flat. Includes click-to-call, quote form, mobile. Live in 5 days.\n\nIn?\n\n— {{my_name}}" },
+
+      { name: "Off-Hours Capture", tone: "direct",
+        emailSubject: "{{business_name}} — capturing after-hours leads",
+        emailBody: "Hi {{owner_first_name}},\n\nWhen {{business_name}} closes for the day, leads keep coming — Google searches don't stop at 6pm.\n\nWithout a website, those after-hours searchers can't book a quote, can't see your services, can't even properly contact you. They just move on to a competitor.\n\nI build websites with after-hours capture: quote forms that email you, click-to-call for daytime, contact forms for evenings.\n\n$499. 5 days. Ready to capture every lead?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, after 6pm leads keep coming. Without a website, they go to competitors.\n\nLet me build {{business_name}} an after-hours capture system. Quote forms, callbacks. $499.\n\n— {{my_name}}" },
+
+      { name: "Free Quote Demo", tone: "no-pressure",
+        emailSubject: "I built a sample for {{business_name}}",
+        emailBody: "Hey {{owner_first_name}},\n\nDownright sketched out a sample website for {{business_name}} — 1 page, your services, click-to-call, quote form.\n\nWant me to send a screenshot? No charge, no commitment.\n\nReply 'send it' and it's on the way.\n\n— {{my_name}}",
+        wa: "Hey {{owner_first_name}} — sketched a 1-page website for {{business_name}} with quote form + click-to-call.\n\nReply 'send' and I'll share the preview 📸\n\n— {{my_name}}" },
+
+      { name: "Premium Positioning", tone: "professional",
+        emailSubject: "Positioning {{business_name}} as premium",
+        emailBody: "Hi {{owner_first_name}},\n\nA professional website does more than capture leads — it positions {{business_name}} as the premium choice in {{city}}.\n\nWhen a customer sees a polished site vs a Google listing, they assume:\n• Better quality of work\n• More established business\n• Worth the premium price\n\nResult: you charge 15-25% more per job.\n\n{{business_name}} has the reviews to justify premium pricing ({{rating}} stars). Let me build the website that backs it up.\n\n$499. 5 days. Interested?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — pro website positions {{business_name}} as premium in {{city}}. Customers pay 15-25% more.\n\nYou have the reviews ({{rating}}⭐) — let me build the site. $499.\n\n— {{my_name}}" },
+
+      { name: "Final Note", tone: "casual",
+        emailSubject: "Last email — {{business_name}}",
+        emailBody: "Hey {{owner_first_name}},\n\nLast note from me, promise.\n\nIf you ever decide a website would help {{business_name}}, my offer stays the same — $499, 5 days, no nonsense.\n\nKeep doing great work in {{city}}.\n\n— {{my_name}}",
+        wa: "Last note from me. If {{business_name}} ever wants a website, I'm here. $499, 5 days, no nonsense.\n\nKeep doing great work 💪\n\n— {{my_name}}" }
+    ]
+  },
+
+  salon: {
+    name: "Salon / Beauty / Wellness",
+    icon: "💇",
+    keywords: ["salon", "barber", "nail", "spa", "massage", "beauty", "yoga", "gym", "fitness", "wellness"],
+    variants: [
+      { name: "Booked Solid?", tone: "growth",
+        emailSubject: "Booked solid every weekend at {{business_name}}?",
+        emailBody: "Hi {{owner_first_name}},\n\n{{business_name}} has {{rating}}-star reviews from {{reviews_count}} clients in {{city}} — clearly loved.\n\nQuestion: are your Tuesday-Thursday slots booked solid too? Most {{niche}}s I work with go from 60% to 90% full week-round after launching a website with online booking.\n\nI build beautiful Instagram-style websites for {{niche}}s (mobile-first, online booking, gallery, IG feed). $599 flat. Live in 7 days.\n\nWorth a 10-min chat?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, weekends booked at {{business_name}}? What about Tuesdays/Wednesdays? 🤔\n\nMost {{niche}}s go from 60% to 90% capacity after launching online booking. I build Instagram-style sites + booking system. $599, 7 days.\n\n— {{my_name}}" },
+
+      { name: "Instagram Power", tone: "trendy",
+        emailSubject: "Convert your IG traffic to bookings 📸",
+        emailBody: "Hi {{owner_first_name}},\n\nQuick question — when someone finds {{business_name}} on Instagram and wants to book, what's the flow? DM you? Visit your link in bio (probably linktree)?\n\nThat's friction. Each step loses 30% of interested clients.\n\nA website with embedded booking turns 'I want this look' into 'I have an appointment Thursday at 3pm' in 60 seconds.\n\n{{business_name}}'s {{rating}}-star reviews show people love your work — let's make booking effortless.\n\n$599. 7 days. Interested?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — when IG followers want to book {{business_name}}, what happens? DM you? Linktree?\n\nEach friction step loses 30% of bookings 😬 A website with embedded booking = client books in 60s. $599, 7 days.\n\n— {{my_name}}" },
+
+      { name: "Mobile-First Pitch", tone: "modern",
+        emailSubject: "{{business_name}} — mobile booking matters",
+        emailBody: "Hi {{owner_first_name}},\n\n90% of {{niche}} bookings start on a phone. {{business_name}} has the reputation ({{rating}} stars × {{reviews_count}} reviews) — but does your booking flow work on mobile?\n\nWithout a mobile-optimized website + booking, you're losing clients who don't want to call or DM.\n\nI build mobile-first {{niche}} websites with one-tap booking. Beautiful, modern, fast.\n\n$599 flat. 7-day setup.\n\nWant details?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — 90% of {{niche}} bookings start on mobile. {{business_name}} has the reviews but no mobile booking site = lost clients.\n\nI build mobile-first sites with one-tap booking. $599. 7 days.\n\n— {{my_name}}" },
+
+      { name: "Visual Showcase", tone: "warm",
+        emailSubject: "Showcasing {{business_name}}'s work properly",
+        emailBody: "Hi {{owner_first_name}},\n\n{{business_name}}'s work is clearly stunning — {{rating}} stars from {{reviews_count}} clients doesn't lie.\n\nBut where do you showcase it? Instagram works for discovery, but clients want to see your full portfolio, services, prices, and book — all in one place.\n\nI build {{niche}} websites built around your visual work: gallery-first design, before/after, pricing, online booking.\n\n$599 flat. 7 days.\n\nLet's elevate your online presence.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, {{business_name}}'s work is stunning ({{rating}}⭐). But Instagram alone doesn't show portfolio + prices + booking in one place.\n\nI build visual {{niche}} sites. Gallery, prices, booking — all together. $599. 7 days.\n\n— {{my_name}}" },
+
+      { name: "Off-Peak Booking", tone: "growth",
+        emailSubject: "Filling {{business_name}}'s off-peak slots",
+        emailBody: "Hi {{owner_first_name}},\n\nQuick growth tactic: a website with online booking + automated promotions fills off-peak slots that would otherwise stay empty.\n\nExample: 'Tuesday morning available — book by Sunday for 15% off' — sends automatically to your client list.\n\n{{business_name}}'s {{reviews_count}} reviews mean you have plenty of past clients to re-engage.\n\nI set this up. $599 includes website + automated booking promotions.\n\nInterested?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — fill {{business_name}}'s off-peak slots with auto promos to past clients. 'Tuesday open, 15% off — book by Sunday'.\n\nYou have {{reviews_count}} past clients to re-engage. Setup: $599. Want details?\n\n— {{my_name}}" },
+
+      { name: "Competitor IG Game", tone: "competitive",
+        emailSubject: "Your {{city}} competition is winning online",
+        emailBody: "Hi {{owner_first_name}},\n\nI checked top {{niche}}s in {{city}} — most have professional websites with online booking. {{business_name}} has better reviews than many of them ({{rating}} stars), but online presence is missing.\n\nClients comparing salons online almost always pick the one with the smoothest booking experience.\n\nLet me build {{business_name}} a website that closes this gap. $599. 7 days.\n\nWorth chatting?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — top {{niche}}s in {{city}} have pro websites. {{business_name}} has better reviews than most but no site.\n\nClients pick smoothest booking. Let me close this gap. $599, 7 days.\n\n— {{my_name}}" },
+
+      { name: "Gift Cards + Upsell", tone: "growth",
+        emailSubject: "Adding revenue streams to {{business_name}}",
+        emailBody: "Hi {{owner_first_name}},\n\nA website unlocks new revenue streams for {{business_name}}:\n• Gift card sales (huge for {{niche}}s, especially holidays)\n• Product sales (your shampoo/tools)\n• Service packages (3-session bundles)\n• Membership tiers\n\nMost of my {{niche}} clients add $1000-3000/month in side revenue from these.\n\nI build websites with all this built-in. $599 setup, no monthly fees.\n\nInterested?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — website unlocks gift cards 🎁 + product sales + packages for {{business_name}}. Adds $1-3K/month for most {{niche}}s.\n\n$599 setup, no monthly fees. In?\n\n— {{my_name}}" },
+
+      { name: "Premium Brand", tone: "warm",
+        emailSubject: "Elevating {{business_name}}'s brand",
+        emailBody: "Hi {{owner_first_name}},\n\n{{business_name}} clearly delivers premium service ({{rating}} stars × {{reviews_count}} reviews). But your brand needs a website to match that quality.\n\nA polished website signals 'premium' before clients even visit. That justifies higher pricing — most of my {{niche}} clients raise prices 15-20% after launching.\n\nI build beautiful, brand-forward websites for {{niche}}s. $599 flat.\n\nLet's elevate {{business_name}}.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, {{business_name}} is premium ({{rating}}⭐) but the brand needs a website to match. Most {{niche}}s raise prices 15-20% after launching.\n\nLet's elevate it. $599.\n\n— {{my_name}}" },
+
+      { name: "Free Mockup", tone: "no-pressure",
+        emailSubject: "Mockup for {{business_name}} (free preview)",
+        emailBody: "Hi {{owner_first_name}},\n\nSketched a quick website design for {{business_name}} — colors based on your brand vibe, gallery layout, online booking flow, IG feed embedded.\n\nWant me to send it? Free preview, no commitment.\n\nJust reply 'send'.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} 🎨 — sketched a website mockup for {{business_name}} (colors, gallery, booking, IG embedded).\n\nReply 'send' for a free preview!\n\n— {{my_name}}" },
+
+      { name: "Final Friendly", tone: "friendly",
+        emailSubject: "Final note — {{business_name}}",
+        emailBody: "Hi {{owner_first_name}},\n\nFinal note from me — promise!\n\nIf you ever want a website that books clients while you sleep, I'm a reply away.\n\nWishing {{business_name}} packed weeks in {{city}}. 💇\n\n— {{my_name}}",
+        wa: "Final note 💇 If {{business_name}} ever wants a website that books while you sleep, I'm here.\n\nPacked weeks ahead!\n\n— {{my_name}}" }
+    ]
+  },
+
+  generic: {
+    name: "Generic / Any Local Business",
+    icon: "🏢",
+    keywords: [],
+    variants: [
+      { name: "Friendly Intro", tone: "friendly",
+        emailSubject: "Quick note about {{business_name}}",
+        emailBody: "Hi {{owner_first_name}},\n\nCame across {{business_name}} on Google — {{rating}} stars × {{reviews_count}} reviews! Clear sign you're doing great work in {{city}}.\n\nQuick observation: no website yet. Most {{niche}}s lose ~40% of potential customers who Google them and find no site to explore.\n\nI build simple, effective websites for local businesses — live in 7 days, $499 flat.\n\nInterested in seeing what could work for {{business_name}}?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} 👋 — saw {{business_name}} on Google ({{rating}}⭐ × {{reviews_count}}). Great work! But no website = losing 40% of curious customers.\n\nSimple site, 7 days, $499. Interested?\n\n— {{my_name}}" },
+
+      { name: "Discovery Pain", tone: "direct",
+        emailSubject: "{{business_name}} — invisible online?",
+        emailBody: "Hi {{owner_first_name}},\n\nGoogle '{{niche}} in {{city}}'. Where does {{business_name}} appear?\n\nWithout a website, you're mostly stuck in Map listings. Most customers click website results first — that's the traffic you're losing.\n\nI build websites for local businesses. $499 flat. Live in a week.\n\nQuick chat?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — Google '{{niche}} {{city}}'. Where's {{business_name}}? Without a site, mostly invisible in regular search.\n\n$499 fixes this. 7 days. Chat?\n\n— {{my_name}}" },
+
+      { name: "Stats Pitch", tone: "professional",
+        emailSubject: "76% of {{niche}}s with websites grow faster",
+        emailBody: "Hi {{owner_first_name}},\n\n2024 data: local businesses with websites grow revenue 2.5x faster than those without.\n\n{{business_name}} clearly has the reputation ({{rating}} stars × {{reviews_count}} reviews) — but is missing the online infrastructure that converts reputation into growth.\n\nI build websites for local businesses. 7-day setup. $499 one-time.\n\nWant a quick proposal?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — businesses with websites grow 2.5x faster. {{business_name}} has the reviews ({{rating}}⭐) but no site infrastructure.\n\n$499, 7 days. Proposal?\n\n— {{my_name}}" },
+
+      { name: "Casual Hook", tone: "casual",
+        emailSubject: "{{business_name}} — random idea",
+        emailBody: "Hey {{owner_first_name}},\n\nRandom outreach — saw {{business_name}}'s amazing reviews on Google. Thought I'd reach out.\n\nQuick offer: I build simple websites for local businesses. $499 one-time. Live in a week. Includes everything basic ({{niche}} services, contact, location, photos, reviews).\n\nWant a peek at examples?\n\n— {{my_name}}",
+        wa: "Hey {{owner_first_name}}, random outreach 👋 Saw {{business_name}}'s amazing reviews on Google.\n\nI build simple websites for local businesses. $499, 7 days. Want to see examples?\n\n— {{my_name}}" },
+
+      { name: "Competitor Edge", tone: "competitive",
+        emailSubject: "Your {{city}} competitors have websites",
+        emailBody: "Hi {{owner_first_name}},\n\nResearched top {{niche}}s in {{city}} today. Most have professional websites. {{business_name}} doesn't — even though your reviews ({{rating}} stars) outperform many.\n\nWhen customers compare options online, they pick businesses they can fully evaluate. No website = often no consideration.\n\nLet me close this gap. $499 flat. 7 days.\n\nInterested?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — your {{city}} {{niche}} competitors have websites. {{business_name}} doesn't, despite better reviews.\n\nCustomers pick what they can fully evaluate. Let's fix this. $499, 7 days.\n\n— {{my_name}}" },
+
+      { name: "Lost Inquiries", tone: "direct",
+        emailSubject: "{{business_name}} — capturing lost inquiries",
+        emailBody: "Hi {{owner_first_name}},\n\nHow many people ring {{business_name}} just to ask basic questions — services, prices, hours, location? Lots, probably.\n\nA website answers all that 24/7. Your phone rings less with FAQ, more with real customers ready to buy.\n\n$499 setup. Live in a week.\n\nWorth chatting?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — how many calls to {{business_name}} are just basic Qs (hours, prices)? A website handles all that 24/7.\n\nPhone rings less with FAQ, more with real customers. $499.\n\n— {{my_name}}" },
+
+      { name: "Review Power", tone: "warm",
+        emailSubject: "Using your {{reviews_count}} reviews properly",
+        emailBody: "Hi {{owner_first_name}},\n\n{{business_name}}'s {{reviews_count}} reviews are an underused asset. On Google Maps, they help you appear in local searches. On a website, they become trust-building content that converts visitors into customers.\n\nI build websites that prominently feature reviews. They typically lift conversion rates by 30-50%.\n\n$499 setup, 7 days.\n\nDetails?\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}}, {{business_name}}'s {{reviews_count}} reviews are gold — but only on Maps. On a website, they convert visitors 30-50% better.\n\nLet me build it. $499. 7 days.\n\n— {{my_name}}" },
+
+      { name: "Free Quote", tone: "no-pressure",
+        emailSubject: "Free website mockup for {{business_name}}",
+        emailBody: "Hi {{owner_first_name}},\n\nSketched a quick website concept for {{business_name}} — homepage, services, contact, reviews embedded.\n\nWant me to send it? Free, no commitment.\n\nReply 'send' and it's on the way.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} 🎨 — sketched a website concept for {{business_name}}. Want free preview? Reply 'send'!\n\n— {{my_name}}" },
+
+      { name: "Trust Signal", tone: "warm",
+        emailSubject: "Building trust for {{business_name}} online",
+        emailBody: "Hi {{owner_first_name}},\n\nIn 2026, no website = no trust signal. When customers Google {{business_name}} and find only a Maps listing, many assume the business is informal or outdated.\n\n{{rating}} stars and {{reviews_count}} reviews say otherwise — but the website is missing.\n\nI build clean, professional websites for local businesses. $499 flat. 7 days.\n\nLet me build {{business_name}}'s trust signal.\n\n— {{my_name}}",
+        wa: "Hi {{owner_first_name}} — in 2026, no website = no trust. Customers assume informal/outdated.\n\n{{business_name}}'s {{rating}}⭐ × {{reviews_count}} reviews say otherwise. Let me build the trust signal. $499.\n\n— {{my_name}}" },
+
+      { name: "Polite Final", tone: "friendly",
+        emailSubject: "Wrapping up — {{business_name}}",
+        emailBody: "Hi {{owner_first_name}},\n\nFinal note from me — promise!\n\nIf you ever want to give {{business_name}} an online presence, just drop a line. Same offer stands: $499, 7 days.\n\nUntil then, keep doing great work in {{city}}.\n\n— {{my_name}}",
+        wa: "Final note 👋 If {{business_name}} ever wants a website, just reply. $499, 7 days.\n\nKeep doing great work in {{city}} 🙌\n\n— {{my_name}}" }
+    ]
+  }
+};
+
+// Build OUTREACH_TEMPLATES from new structure (one template per niche, with all variants)
+const OUTREACH_TEMPLATES = Object.fromEntries(
+  Object.entries(NICHE_TEMPLATES).map(([key, niche]) => [
+    key,
+    {
+      name: niche.name,
+      niche: niche.name,
+      desc: `${niche.variants.length} variants × 2 channels (Email + WhatsApp). Profile-aware tone.`,
+      icon: niche.icon,
+      days: [0, 3, 7, 14],
+      emails: niche.variants.slice(0, 4).map(v => ({ subject: v.emailSubject, body: v.emailBody })),
+      variants: niche.variants
+    }
+  ])
+);
+
+// Legacy keys kept for backward compatibility with existing saved sequences
+OUTREACH_TEMPLATES.restaurant_friendly = OUTREACH_TEMPLATES.restaurant;
+OUTREACH_TEMPLATES.dentist_professional = OUTREACH_TEMPLATES.dentist;
+OUTREACH_TEMPLATES.service_local = OUTREACH_TEMPLATES.service;
+OUTREACH_TEMPLATES.salon_growth = OUTREACH_TEMPLATES.salon;
+OUTREACH_TEMPLATES.generic_local = OUTREACH_TEMPLATES.generic;
+
+// Stub to prevent old template definitions from breaking parser
+const _LEGACY_REMOVED = {
+  "restaurant_friendly_OLD": {
     name: "Restaurant — Friendly",
     niche: "Restaurant",
     desc: "Warm tone for restaurants & cafes. 4 emails over 14 days.",
@@ -1652,15 +2047,59 @@ const OUTREACH_TEMPLATES = {
   }
 };
 
-// Suggest template based on lead's niche
+// Suggest niche-key based on lead's niche
 function suggestTemplate(niche) {
-  if (!niche) return "generic_local";
+  if (!niche) return "generic";
   const n = niche.toLowerCase();
-  if (n.includes("restaurant") || n.includes("cafe") || n.includes("bakery") || n.includes("pizza") || n.includes("food") || n.includes("bar") || n.includes("pub")) return "restaurant_friendly";
-  if (n.includes("dentist") || n.includes("doctor") || n.includes("chiroprac") || n.includes("physio") || n.includes("optom") || n.includes("vet") || n.includes("pharm")) return "dentist_professional";
-  if (n.includes("plumber") || n.includes("electric") || n.includes("hvac") || n.includes("roofer") || n.includes("paint") || n.includes("carpent") || n.includes("handyman") || n.includes("lock") || n.includes("auto") || n.includes("mech")) return "service_local";
-  if (n.includes("salon") || n.includes("barber") || n.includes("nail") || n.includes("spa") || n.includes("massage") || n.includes("beauty") || n.includes("yoga") || n.includes("gym")) return "salon_growth";
-  return "generic_local";
+  for (const [key, def] of Object.entries(NICHE_TEMPLATES)) {
+    if (key === "generic") continue;
+    if (def.keywords.some(kw => n.includes(kw))) return key;
+  }
+  return "generic";
+}
+
+// Pick a smart default variant based on lead's profile
+function suggestVariantIdx(lead, nicheKey) {
+  const variants = NICHE_TEMPLATES[nicheKey]?.variants || [];
+  if (variants.length === 0) return 0;
+  const rating = parseFloat(lead.rating || 0);
+  const reviews = parseInt(lead.reviews || 0);
+  // High-reputation business → warm/praise approach (variant 0 or 5)
+  if (rating >= 4.5 && reviews >= 100) return 0; // Friendly Praise / Professional Intro
+  // Newer/smaller business → growth/help approach
+  if (reviews < 30) return 7; // mockup/free preview variants
+  // High volume but mid rating → competitor angle
+  if (reviews >= 200 && rating < 4.5) return 6; // competitor angle
+  // Default: friendly variant
+  return 0;
+}
+
+// Generate profile insight text for the lead
+function getProfileInsight(lead) {
+  const rating = parseFloat(lead.rating || 0);
+  const reviews = parseInt(lead.reviews || 0);
+  if (rating >= 4.7 && reviews >= 100) {
+    return { icon: "⭐", text: "Top-tier reputation — emphasize praise & trust", tone: "warm" };
+  }
+  if (rating >= 4.5 && reviews >= 50) {
+    return { icon: "👍", text: "Established business — direct pitch works well", tone: "professional" };
+  }
+  if (reviews < 30) {
+    return { icon: "🌱", text: "Newer/smaller business — offer free mockup to build trust", tone: "no-pressure" };
+  }
+  if (reviews >= 200) {
+    return { icon: "🔥", text: "High-volume business — they're being targeted by competitors. Be concise.", tone: "direct" };
+  }
+  if (rating < 4) {
+    return { icon: "💡", text: "Mixed reviews — they need help! Empathetic + solution-focused angle", tone: "warm" };
+  }
+  return { icon: "📊", text: "Standard local business — generic friendly pitch works", tone: "friendly" };
+}
+
+// Clean phone number for WhatsApp URL (digits only, with country code)
+function cleanPhone(phone) {
+  if (!phone) return "";
+  return phone.replace(/[^\d+]/g, "").replace(/^\+/, "");
 }
 
 // Personalize template by replacing tokens
@@ -1695,13 +2134,16 @@ function startSequence() {
     return;
   }
 
-  const tmpl = OUTREACH_TEMPLATES[templateId];
+  // Use new niche key if present, else map legacy keys
+  const nicheKey = (templateId in NICHE_TEMPLATES) ? templateId : suggestTemplate(STATE.unlocked[leadId]?.leadSnapshot?.niche || "");
+  const days = [0, 3, 7, 14];
   STATE.sequences[leadId] = {
-    leadId, templateId,
+    leadId,
+    templateId: nicheKey,
     startedAt: Date.now(),
     currentStep: 0,
     status: "active",
-    steps: tmpl.days.map((day) => ({ day, sentAt: null })),
+    steps: days.map((day) => ({ day, sentAt: null })),
   };
   save();
   closeModal("newSeq");
@@ -1735,33 +2177,38 @@ function populateNewSeqModal() {
     opt.textContent = `${L.name} — ${L.niche} (${L.city || "?"})`;
     leadSel.appendChild(opt);
   });
-  // Template picker
+  // Template picker (only show new niche templates)
   const tmplSel = document.getElementById("seqTemplatePicker");
-  tmplSel.innerHTML = '<option value="">— Choose a template —</option>';
-  Object.entries(OUTREACH_TEMPLATES).forEach(([id, t]) => {
+  tmplSel.innerHTML = '<option value="">— Auto-suggest based on niche —</option>';
+  Object.entries(NICHE_TEMPLATES).forEach(([id, t]) => {
     const opt = document.createElement("option");
     opt.value = id;
-    opt.textContent = `${t.name}`;
+    opt.textContent = `${t.icon} ${t.name} (${t.variants.length} variants)`;
     tmplSel.appendChild(opt);
   });
 }
 
-// Auto-suggest template when lead picked + show preview
+// Auto-suggest template + show preview of first variant
 function updateSeqPreview() {
   const leadId = document.getElementById("seqLeadPicker").value;
   const tmplSel = document.getElementById("seqTemplatePicker");
   const preview = document.getElementById("seqPreview");
-  if (!leadId) { preview.textContent = "Pick a lead and template above to see preview."; return; }
+  if (!leadId) { preview.textContent = "Pick a lead above to see preview."; return; }
   const L = STATE.unlocked[leadId]?.leadSnapshot;
   if (!L) return;
   // Auto-suggest if no template chosen
   if (!tmplSel.value) {
     tmplSel.value = suggestTemplate(L.niche);
   }
-  const tmpl = OUTREACH_TEMPLATES[tmplSel.value];
-  if (!tmpl) { preview.textContent = "Pick a template to preview."; return; }
-  const e = tmpl.emails[0];
-  preview.innerHTML = `<div class="subj-line">Subject: ${escapeHtml(personalize(e.subject, L))}</div>${escapeHtml(personalize(e.body, L))}`;
+  const niche = NICHE_TEMPLATES[tmplSel.value];
+  if (!niche) { preview.textContent = "Pick a template to preview."; return; }
+  const variantIdx = suggestVariantIdx(L, tmplSel.value);
+  const v = niche.variants[variantIdx];
+  if (!v) return;
+  const insight = getProfileInsight(L);
+  preview.innerHTML =
+    `<div style="background:white;padding:8px 12px;border-radius:6px;border:1px solid var(--gray-200);margin-bottom:10px;font-family:inherit;">${insight.icon} <strong>${escapeHtml(insight.text)}</strong> · Auto-picked: <strong>${escapeHtml(v.name)}</strong></div>` +
+    `<div class="subj-line">Subject: ${escapeHtml(personalize(v.emailSubject, L))}</div>${escapeHtml(personalize(v.emailBody, L))}`;
 }
 
 // Today's queue: emails due today or overdue
@@ -1827,7 +2274,9 @@ function renderActiveSequences() {
   wrap.innerHTML = seqs.map(seq => {
     const L = STATE.unlocked[seq.leadId]?.leadSnapshot;
     if (!L) return "";
-    const tmpl = OUTREACH_TEMPLATES[seq.templateId];
+    // Resolve niche template (handles both new + legacy keys)
+    const nicheKey = (seq.templateId in NICHE_TEMPLATES) ? seq.templateId : suggestTemplate(L.niche);
+    const niche = NICHE_TEMPLATES[nicheKey];
     const stepsHtml = seq.steps.map((step, idx) => {
       const dueAt = seq.startedAt + step.day * 24 * 60 * 60 * 1000;
       let cls = "upcoming";
@@ -1840,7 +2289,7 @@ function renderActiveSequences() {
       <div class="seq-card-head">
         <div>
           <div class="seq-card-lead">${escapeHtml(L.name)}</div>
-          <div class="seq-card-sub">${escapeHtml(tmpl ? tmpl.name : seq.templateId)} · started ${timeAgo(seq.startedAt)}</div>
+          <div class="seq-card-sub">${niche ? niche.icon + " " + escapeHtml(niche.name) : escapeHtml(seq.templateId)} · started ${timeAgo(seq.startedAt)}</div>
         </div>
         <span class="seq-status-pill seq-status-${seq.status}">${seq.status}</span>
       </div>
@@ -1857,56 +2306,164 @@ function renderActiveSequences() {
 
 function renderTemplates() {
   const wrap = document.getElementById("templateList");
-  wrap.innerHTML = Object.entries(OUTREACH_TEMPLATES).map(([id, t]) => `
+  wrap.innerHTML = Object.entries(NICHE_TEMPLATES).map(([id, t]) => `
     <div class="template-card">
-      <div class="template-name">${escapeHtml(t.name)}</div>
-      <span class="template-tag">${escapeHtml(t.niche)}</span>
-      <div class="template-desc">${escapeHtml(t.desc)}</div>
+      <div class="template-name">${t.icon} ${escapeHtml(t.name)}</div>
+      <span class="template-tag">${t.variants.length} variants × 2 channels</span>
+      <div class="template-desc">10 hand-crafted variants (friendly, professional, urgent, casual, etc.) — both Email + WhatsApp. Profile-aware auto-suggestion.</div>
     </div>
   `).join("");
 }
 
-let SEND_CTX = null; // { leadId, stepIdx }
+let SEND_CTX = null; // { leadId, stepIdx, channel, variantIdx, nicheKey }
 
 function openSendEmail(leadId, stepIdx) {
   const seq = STATE.sequences[leadId];
   const L = STATE.unlocked[leadId]?.leadSnapshot;
   if (!seq || !L) return;
-  const tmpl = OUTREACH_TEMPLATES[seq.templateId];
-  if (!tmpl) return;
-  const e = tmpl.emails[stepIdx];
-  if (!e) return;
-  SEND_CTX = { leadId, stepIdx };
-  document.getElementById("sendEmailTitle").textContent = `Email ${stepIdx + 1} of 4 — ${L.name}`;
-  document.getElementById("sendEmailSub").textContent = `${tmpl.name} · Day ${tmpl.days[stepIdx]}`;
-  document.getElementById("sendEmailTo").value = L.email || "(no email on lead — use phone/WhatsApp)";
-  document.getElementById("sendEmailSubject").value = personalize(e.subject, L);
-  document.getElementById("sendEmailBody").value = personalize(e.body, L);
+  // Determine niche key (maps old keys to new structure)
+  const nicheKey = (seq.templateId in NICHE_TEMPLATES) ? seq.templateId : suggestTemplate(L.niche);
+  const niche = NICHE_TEMPLATES[nicheKey];
+  if (!niche) { toast("Template not found", "danger"); return; }
+
+  // Initial variant suggestion based on profile
+  const variantIdx = suggestVariantIdx(L, nicheKey);
+  SEND_CTX = { leadId, stepIdx, channel: "email", variantIdx, nicheKey };
+
+  document.getElementById("sendEmailTitle").textContent = `Message ${stepIdx + 1} of 4 — ${L.name}`;
+  document.getElementById("sendEmailSub").textContent = `${niche.icon} ${niche.name} · Day ${niche.days ? niche.days[stepIdx] || 0 : 0} · ${L.city || ""}`;
+
+  // Profile insight
+  const insight = getProfileInsight(L);
+  document.getElementById("profileInsight").innerHTML =
+    `<span class="icon">${insight.icon}</span><span class="text">${insight.text} · ⭐ ${L.rating ? L.rating.toFixed(1) : "—"} from ${L.reviews || 0} reviews</span>`;
+
+  // Variant total
+  document.getElementById("variantTotal").textContent = niche.variants.length;
+
+  updateSendModalContent();
   openModal("sendEmail");
 }
 
-function sendViaGmail() {
+function switchChannel(channel) {
+  if (!SEND_CTX) return;
+  SEND_CTX.channel = channel;
+  document.querySelectorAll(".channel-btn").forEach(b => b.classList.toggle("active", b.dataset.channel === channel));
+  document.querySelector(".modal-bg.active .modal").classList.toggle("channel-whatsapp", channel === "whatsapp");
+  updateSendModalContent();
+}
+
+function regenerateVariant() {
+  if (!SEND_CTX) return;
+  const niche = NICHE_TEMPLATES[SEND_CTX.nicheKey];
+  if (!niche || niche.variants.length === 0) return;
+  // Pick random different variant
+  let next = SEND_CTX.variantIdx;
+  while (next === SEND_CTX.variantIdx && niche.variants.length > 1) {
+    next = Math.floor(Math.random() * niche.variants.length);
+  }
+  SEND_CTX.variantIdx = next;
+  updateSendModalContent();
+  toast(`✓ Regenerated — ${niche.variants[next].name}`, "success");
+}
+
+function nextVariant() {
+  if (!SEND_CTX) return;
+  const niche = NICHE_TEMPLATES[SEND_CTX.nicheKey];
+  if (!niche) return;
+  SEND_CTX.variantIdx = (SEND_CTX.variantIdx + 1) % niche.variants.length;
+  updateSendModalContent();
+}
+
+function prevVariant() {
+  if (!SEND_CTX) return;
+  const niche = NICHE_TEMPLATES[SEND_CTX.nicheKey];
+  if (!niche) return;
+  SEND_CTX.variantIdx = (SEND_CTX.variantIdx - 1 + niche.variants.length) % niche.variants.length;
+  updateSendModalContent();
+}
+
+function updateSendModalContent() {
   if (!SEND_CTX) return;
   const L = STATE.unlocked[SEND_CTX.leadId]?.leadSnapshot;
-  const to = L && L.email ? L.email : "";
-  const subject = document.getElementById("sendEmailSubject").value;
+  const niche = NICHE_TEMPLATES[SEND_CTX.nicheKey];
+  if (!L || !niche) return;
+  const v = niche.variants[SEND_CTX.variantIdx];
+  if (!v) return;
+
+  // Update variant info
+  document.getElementById("variantNum").textContent = SEND_CTX.variantIdx + 1;
+  document.getElementById("variantName").textContent = `${v.name} (${v.tone})`;
+
+  // Channel-specific fields
+  const isEmail = SEND_CTX.channel === "email";
+  const subjectGroup = document.getElementById("subjectGroup");
+  const recipientLabel = document.getElementById("recipientLabel");
+  const sendBtn = document.getElementById("sendChannelBtn");
+  const toField = document.getElementById("sendEmailTo");
+
+  if (isEmail) {
+    subjectGroup.style.display = "";
+    recipientLabel.textContent = "To (Email)";
+    toField.value = L.email || "(no email on lead — switch to WhatsApp or Copy/Paste)";
+    document.getElementById("sendEmailSubject").value = personalize(v.emailSubject, L);
+    document.getElementById("sendEmailBody").value = personalize(v.emailBody, L);
+    sendBtn.innerHTML = "📧 Send via Email";
+  } else {
+    subjectGroup.style.display = "none";
+    recipientLabel.textContent = "To (Phone)";
+    toField.value = L.phone || "(no phone on lead — use Email)";
+    document.getElementById("sendEmailBody").value = personalize(v.wa, L);
+    sendBtn.innerHTML = "💬 Send via WhatsApp";
+  }
+}
+
+function sendViaChannel() {
+  if (!SEND_CTX) return;
+  const L = STATE.unlocked[SEND_CTX.leadId]?.leadSnapshot;
+  if (!L) return;
   const body = document.getElementById("sendEmailBody").value;
-  const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = url;
-  // After opening mail client, suggest marking as sent
+
+  if (SEND_CTX.channel === "email") {
+    const to = L.email || "";
+    const subject = document.getElementById("sendEmailSubject").value;
+    if (!to) {
+      toast("No email available. Use Copy or switch to WhatsApp.", "danger");
+      return;
+    }
+    const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = url;
+  } else {
+    // WhatsApp
+    const phone = cleanPhone(L.phone);
+    if (!phone) {
+      toast("No phone available. Use Copy or switch to Email.", "danger");
+      return;
+    }
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(body)}`;
+    window.open(url, "_blank");
+  }
+
   setTimeout(() => {
-    if (confirm("Email opened in your mail app. Mark as Sent?")) {
+    if (confirm("Message sent? Mark as Sent in your sequence?")) {
       markAsSent();
     }
   }, 800);
 }
 
 function copySendEmail() {
-  const subject = document.getElementById("sendEmailSubject").value;
+  const channel = SEND_CTX?.channel || "email";
   const body = document.getElementById("sendEmailBody").value;
-  const text = `Subject: ${subject}\n\n${body}`;
-  navigator.clipboard.writeText(text).then(() => toast("✓ Copied to clipboard", "success"));
+  let text = body;
+  if (channel === "email") {
+    const subject = document.getElementById("sendEmailSubject").value;
+    text = `Subject: ${subject}\n\n${body}`;
+  }
+  navigator.clipboard.writeText(text).then(() => toast(`✓ ${channel === "email" ? "Email" : "WhatsApp"} copied`, "success"));
 }
+
+// Legacy alias for backward compatibility
+const sendViaGmail = sendViaChannel;
 
 function markAsSent() {
   if (!SEND_CTX) return;
