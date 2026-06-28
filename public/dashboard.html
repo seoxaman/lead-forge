@@ -276,6 +276,69 @@
   .status-replied { background: var(--warning-soft); color: #92400E; }
   .status-closed { background: var(--success-soft); color: #065F46; }
 
+  /* ===== Outreach Sequencer ===== */
+  .outreach-section { margin-bottom: 28px; }
+  .outreach-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+  .outreach-title { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .outreach-sub { font-size: 13px; color: var(--gray-500); }
+  .outreach-queue { display: flex; flex-direction: column; gap: 8px; }
+  .queue-empty { background: white; border: 1px dashed var(--gray-300); border-radius: var(--radius); padding: 32px 20px; text-align: center; color: var(--gray-500); font-size: 14px; }
+  .queue-item { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 14px 18px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; }
+  .queue-item:hover { border-color: var(--brand-2); box-shadow: var(--shadow); }
+  .queue-item.overdue { border-color: var(--warning); background: linear-gradient(180deg, #FFFBEB 0%, white 50%); }
+  .queue-day-badge { background: var(--brand-soft); color: var(--brand); width: 48px; height: 48px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .queue-day-badge.overdue { background: var(--warning-soft); color: var(--warning); }
+  .queue-day-badge .step { font-size: 16px; line-height: 1; }
+  .queue-day-badge .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .queue-meta { flex: 1; min-width: 0; }
+  .queue-lead-name { font-weight: 700; color: var(--gray-900); font-size: 14px; margin-bottom: 2px; }
+  .queue-context { font-size: 12px; color: var(--gray-500); }
+  .queue-context .niche { color: var(--brand-2); font-weight: 600; }
+  .queue-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .seq-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; transition: all 0.15s; }
+  .seq-card:hover { border-color: var(--gray-300); }
+  .seq-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .seq-card-lead { font-weight: 700; color: var(--gray-900); font-size: 15px; }
+  .seq-card-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+  .seq-status-pill { padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .seq-status-active { background: var(--brand-soft); color: var(--brand); }
+  .seq-status-replied { background: var(--success-soft); color: var(--success); }
+  .seq-status-completed { background: var(--gray-100); color: var(--gray-600); }
+  .seq-status-paused { background: var(--warning-soft); color: var(--warning); }
+
+  .seq-progress { display: flex; gap: 6px; margin: 10px 0; }
+  .seq-step { flex: 1; padding: 6px 8px; border-radius: 6px; background: var(--gray-100); text-align: center; font-size: 11px; font-weight: 600; color: var(--gray-500); position: relative; cursor: default; }
+  .seq-step.sent { background: var(--success-soft); color: var(--success); }
+  .seq-step.due { background: var(--warning-soft); color: var(--warning); cursor: pointer; }
+  .seq-step.due:hover { background: var(--warning); color: white; }
+  .seq-step.upcoming { background: var(--gray-50); color: var(--gray-400); }
+
+  .seq-card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .seq-mini-btn { padding: 5px 10px; border: 1px solid var(--gray-200); background: white; color: var(--gray-700); border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .seq-mini-btn:hover { background: var(--gray-50); border-color: var(--gray-300); }
+  .seq-mini-btn.danger:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+  .seq-mini-btn.success:hover { background: var(--success-soft); color: var(--success); border-color: var(--success); }
+
+  .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .template-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: all 0.15s; }
+  .template-card:hover { border-color: var(--brand-2); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .template-name { font-weight: 700; color: var(--gray-900); font-size: 14px; margin-bottom: 4px; }
+  .template-tag { display: inline-block; background: var(--brand-soft); color: var(--brand); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px; }
+  .template-desc { font-size: 12px; color: var(--gray-500); line-height: 1.5; }
+
+  .form-label { display: block; font-size: 12px; color: var(--gray-700); margin-bottom: 6px; font-weight: 600; }
+  .seq-preview { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px; min-height: 140px; font-size: 12px; color: var(--gray-700); white-space: pre-wrap; font-family: ui-monospace, SF Mono, monospace; line-height: 1.6; max-height: 280px; overflow-y: auto; }
+  .seq-preview .subj-line { color: var(--brand); font-weight: 700; margin-bottom: 8px; font-family: inherit; font-size: 13px; }
+  .seq-body-edit { width: 100%; padding: 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 13px; font-family: ui-monospace, SF Mono, monospace; line-height: 1.6; resize: vertical; min-height: 200px; }
+
+  @media (max-width: 600px) {
+    .queue-item { flex-wrap: wrap; }
+    .queue-actions { width: 100%; }
+    .queue-actions .seq-mini-btn { flex: 1; }
+    .template-grid { grid-template-columns: 1fr; }
+  }
+
   /* ===== Toast — bulletproof hide (display:none when not active) ===== */
   .toast {
     display: none !important;
@@ -477,6 +540,11 @@
         <span class="tab-label">My Leads</span>
         <span class="badge-count" id="myLeadsCount">0</span>
       </button>
+      <button class="tab" data-tab="outreach" title="Outreach">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4h12v9H2z"/><path d="M2 4l6 4 6-4"/></svg>
+        <span class="tab-label">Outreach</span>
+        <span class="badge-count" id="outreachCount">0</span>
+      </button>
       <button class="tab" data-tab="history" title="History">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>
         <span class="tab-label">History</span>
@@ -655,6 +723,42 @@
     <div id="myLeadsView"></div>
   </div>
 
+  <!-- ===== OUTREACH TAB ===== -->
+  <div id="tab-outreach" class="tab-content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Outreach Sequencer</div>
+        <div class="page-subtitle">Send personalized cold email sequences. Auto follow-ups. Track per lead.</div>
+      </div>
+    </div>
+
+    <!-- Today's queue -->
+    <div class="outreach-section">
+      <div class="outreach-section-head">
+        <h3 class="outreach-title">📬 Today's Queue</h3>
+        <span class="outreach-sub" id="todayQueueCount">0 emails to send today</span>
+      </div>
+      <div id="todayQueueList" class="outreach-queue"></div>
+    </div>
+
+    <!-- Active sequences -->
+    <div class="outreach-section">
+      <div class="outreach-section-head">
+        <h3 class="outreach-title">⚡ Active Sequences</h3>
+        <button class="btn btn-solid" style="max-width:200px;padding:8px 14px;font-size:13px;" onclick="openModal('newSeq')">+ Start New Sequence</button>
+      </div>
+      <div id="activeSeqList"></div>
+    </div>
+
+    <!-- Templates info -->
+    <div class="outreach-section">
+      <div class="outreach-section-head">
+        <h3 class="outreach-title">📝 Email Templates</h3>
+      </div>
+      <div class="template-grid" id="templateList"></div>
+    </div>
+  </div>
+
   <!-- ===== HISTORY TAB ===== -->
   <div id="tab-history" class="tab-content">
     <div class="page-header">
@@ -689,6 +793,70 @@
 </div>
 
 <div class="modal-bg" id="modal-detail"><div class="modal" id="detailContent"></div></div>
+
+<!-- ===== NEW SEQUENCE MODAL ===== -->
+<div class="modal-bg" id="modal-newSeq">
+  <div class="modal" style="max-width:640px;">
+    <button class="modal-close" onclick="closeModal('newSeq')">×</button>
+    <h2>Start New Outreach Sequence</h2>
+    <p class="sub">Pick a lead and template. Personalized 4-email sequence will run over 14 days.</p>
+
+    <div class="form-group">
+      <label class="form-label">1. Select Lead (from your unlocked leads)</label>
+      <select class="select" id="seqLeadPicker" onchange="updateSeqPreview()">
+        <option value="">— Choose a lead —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">2. Pick Template (auto-suggested based on niche)</label>
+      <select class="select" id="seqTemplatePicker" onchange="updateSeqPreview()">
+        <option value="">— Choose a template —</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">3. Preview First Email</label>
+      <div id="seqPreview" class="seq-preview">Pick a lead and template above to see preview.</div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;border-top:1px solid var(--gray-100);padding-top:18px;">
+      <button class="btn btn-ghost" onclick="closeModal('newSeq')" style="flex:1;">Cancel</button>
+      <button class="btn btn-solid" onclick="startSequence()" style="flex:2;">Start Sequence (send Email 1)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEND EMAIL MODAL ===== -->
+<div class="modal-bg" id="modal-sendEmail">
+  <div class="modal" style="max-width:680px;">
+    <button class="modal-close" onclick="closeModal('sendEmail')">×</button>
+    <h2 id="sendEmailTitle">Send Email</h2>
+    <p class="sub" id="sendEmailSub">Personalized for your lead.</p>
+
+    <div class="form-group">
+      <label class="form-label">To</label>
+      <input type="text" class="input" id="sendEmailTo" readonly />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Subject</label>
+      <input type="text" class="input" id="sendEmailSubject" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Body (edit as needed)</label>
+      <textarea id="sendEmailBody" rows="10" class="seq-body-edit"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;border-top:1px solid var(--gray-100);padding-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-ghost" onclick="closeModal('sendEmail')" style="flex:1;min-width:100px;">Cancel</button>
+      <button class="btn btn-outline" onclick="copySendEmail()" style="flex:1;min-width:120px;">📋 Copy</button>
+      <button class="btn btn-solid" onclick="sendViaGmail()" style="flex:2;min-width:160px;">📧 Send via Email</button>
+      <button class="btn btn-solid" onclick="markAsSent()" style="flex:2;min-width:160px;background:var(--success);">✓ Mark as Sent</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== REPORT MODAL ===== -->
 <div class="modal-bg" id="modal-report">
@@ -773,6 +941,7 @@ const STATE = {
   history: JSON.parse(localStorage.getItem("lf_history") || "[]"),
   savedQueries: JSON.parse(localStorage.getItem("lf_savedQueries") || "[]"),
   pendingRun: JSON.parse(localStorage.getItem("lf_pendingRun") || "null"),
+  sequences: JSON.parse(localStorage.getItem("lf_sequences") || "{}"),
   filters: { country: "", city: "", niche: "", count: 10, minRating: 0, minReviews: 0, hasPhone: false, hasEmail: false },
   sort: "rating",
 };
@@ -783,6 +952,7 @@ function save() {
   localStorage.setItem("lf_history", JSON.stringify(STATE.history));
   localStorage.setItem("lf_savedQueries", JSON.stringify(STATE.savedQueries));
   localStorage.setItem("lf_pendingRun", JSON.stringify(STATE.pendingRun));
+  localStorage.setItem("lf_sequences", JSON.stringify(STATE.sequences));
 }
 
 function logHistory(action, delta) {
@@ -1235,11 +1405,15 @@ function openDetail(leadId) {
       <textarea id="notesTxt" rows="3" placeholder="Pitch ideas, follow-up reminders, key contacts..." style="width:100%;padding:10px;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;">${escapeHtml(U.notes || "")}</textarea>
       <button class="btn btn-ghost" style="margin-top:8px;max-width:120px;" onclick="saveNotes('${L.id}')">Save notes</button>
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px;border-top:1px solid var(--gray-100);padding-top:16px;">
-      <button class="btn btn-solid" onclick="copyContact('${L.id}')">📋 Copy contact</button>
+    <div style="display:flex;gap:8px;margin-top:16px;border-top:1px solid var(--gray-100);padding-top:16px;flex-wrap:wrap;">
+      <button class="btn btn-solid" onclick="copyContact('${L.id}')" style="flex:1;min-width:120px;">📋 Copy contact</button>
+      ${(STATE.sequences && STATE.sequences[L.id] && STATE.sequences[L.id].status === "active")
+        ? `<button class="btn btn-outline" onclick="closeModal('detail');switchTab('outreach');" style="flex:1;min-width:120px;background:var(--brand-soft);color:var(--brand);">📧 Outreach active</button>`
+        : `<button class="btn btn-outline" onclick="closeModal('detail');document.getElementById('seqLeadPicker').value='${L.id}';updateSeqPreview();openModal('newSeq');" style="flex:1;min-width:120px;">📧 Start outreach</button>`
+      }
       ${U.reportStatus === "pending"
-        ? `<button class="btn btn-ghost" disabled style="background:var(--warning-soft);color:#92400E;border-color:#FCD34D;cursor:not-allowed;">⏳ Under review</button>`
-        : `<button class="btn btn-ghost" onclick="reportBad('${L.id}')">⚠ Report bad lead</button>`
+        ? `<button class="btn btn-ghost" disabled style="background:var(--warning-soft);color:#92400E;border-color:#FCD34D;cursor:not-allowed;flex:1;min-width:120px;">⏳ Under review</button>`
+        : `<button class="btn btn-ghost" onclick="reportBad('${L.id}')" style="flex:1;min-width:120px;">⚠ Report bad lead</button>`
       }
     </div>
   `;
@@ -1410,6 +1584,374 @@ function renderHistory() {
   `).join("");
 }
 
+// ========================================================================
+// ===== OUTREACH SEQUENCER =====
+// ========================================================================
+
+// Email templates by niche — 4-email sequences, sent at Day 0/3/7/14
+const OUTREACH_TEMPLATES = {
+  "restaurant_friendly": {
+    name: "Restaurant — Friendly",
+    niche: "Restaurant",
+    desc: "Warm tone for restaurants & cafes. 4 emails over 14 days.",
+    emails: [
+      { subject: "Loved your reviews, {{business_name}}!", body: "Hi there,\n\nJust spotted {{business_name}} on Google — {{rating}} stars with {{reviews_count}} reviews in {{city}}! Clearly your food is loved.\n\nQuick question: I noticed you don't have a website yet. Most {{niche}}s like yours lose 30-50% of evening foot traffic because people can't preview menus or book a table online.\n\nI build simple websites for local restaurants (usually live within 7 days, starting at $399).\n\nWould a 10-min call this week work to show what's possible?\n\n— {{my_name}}" },
+      { subject: "Following up on {{business_name}}'s website", body: "Hi again!\n\nDropping a quick note — just wanted to make sure my earlier email didn't get lost.\n\nI work specifically with {{niche}}s in {{city}} and recently helped a similar spot increase weekend bookings by 40% with just a 1-page website.\n\nIf timing's bad, no worries — just reply 'not now' and I'll check back in 6 months.\n\n— {{my_name}}" },
+      { subject: "{{business_name}} website mockup — 5 min look?", body: "Hi,\n\nI took 20 minutes and sketched a quick website mockup for {{business_name}} — just to show you what's possible. Want me to send it over?\n\nNo commitment, just a free preview. If you like it, we talk. If not, no harm done.\n\nReply with 'send it' and I'll fire it across.\n\n— {{my_name}}" },
+      { subject: "Last note about {{business_name}}'s website", body: "Hi {{owner_first_name}},\n\nThis is my last note — promise I won't keep emailing!\n\nIf having a website isn't on your radar right now, totally understand. But if it ever is, just reply to this email — I'll always remember {{business_name}} from {{city}}.\n\nKeep cooking the magic. 🍽️\n\n— {{my_name}}" }
+    ],
+    days: [0, 3, 7, 14]
+  },
+  "dentist_professional": {
+    name: "Dentist / Medical — Professional",
+    niche: "Dentist",
+    desc: "Professional tone for medical/dental practices. 4 emails over 14 days.",
+    emails: [
+      { subject: "{{business_name}} — boosting new patient inquiries", body: "Dear {{owner_first_name}},\n\nI noticed {{business_name}} has built an excellent reputation in {{city}} ({{rating}}-star average from {{reviews_count}} patients).\n\nHowever, without a website, you may be missing out on new patient inquiries — 73% of patients now research dental practices online before booking.\n\nI specialize in clean, professional websites for medical practices (HIPAA-compliant, online booking, before/after galleries). Setup is usually completed within 10 business days.\n\nMay I share a brief 2-minute video showing the type of site I'd build for {{business_name}}?\n\nRegards,\n{{my_name}}" },
+      { subject: "Re: {{business_name}} — patient acquisition site", body: "Dear {{owner_first_name}},\n\nFollowing up on my previous note about building {{business_name}} a professional patient-acquisition website.\n\nA simple stat: practices with websites see 2.5x more new patient bookings than those without.\n\nIf interested, I can send a sample design + a clear quote within 24 hours.\n\nRegards,\n{{my_name}}" },
+      { subject: "Quick demo — {{business_name}}", body: "Dear {{owner_first_name}},\n\nI prepared a mock website layout for {{business_name}}. Would you like me to email it for your review?\n\nNo cost, no commitment — just a visual reference of what's possible.\n\nA brief reply with 'Yes, send mockup' is all I need.\n\nRegards,\n{{my_name}}" },
+      { subject: "Closing the loop — {{business_name}}", body: "Dear {{owner_first_name}},\n\nThis is my final follow-up. If you'd ever like to explore building an online presence for {{business_name}}, my offer stands.\n\nFor now, wishing your practice continued success in {{city}}.\n\nRegards,\n{{my_name}}" }
+    ],
+    days: [0, 3, 7, 14]
+  },
+  "service_local": {
+    name: "Service Business — Direct",
+    niche: "Plumber/Electrician/HVAC",
+    desc: "Direct tone for tradespeople and service businesses. 4 emails over 14 days.",
+    emails: [
+      { subject: "Quick question for {{business_name}}", body: "Hey {{owner_first_name}},\n\nSaw {{business_name}} on Google ({{rating}} stars, {{reviews_count}} reviews) — solid work in {{city}}.\n\nQuick question: how are you getting most of your jobs right now? Word of mouth?\n\nI ask because without a website, you're missing the people who Google '{{niche}} near me' at 11pm with a busted pipe / flickering lights. That's 60% of urgent local searches.\n\nI build no-nonsense websites for trades like yours — $499 flat, live in 5 days, with quote forms and call buttons.\n\nWorth a 5-min chat?\n\n— {{my_name}}" },
+      { subject: "{{business_name}} — second try", body: "Hey,\n\nJust checking — did my last note hit your spam folder?\n\nTo recap: I help {{niche}}s in {{city}} get more emergency jobs through a simple website ($499 one-time, live in 5 days).\n\nMost of my clients book their first job from the site within 2 weeks.\n\nReply 'tell me more' and I'll send details.\n\n— {{my_name}}" },
+      { subject: "What jobs are you losing right now?", body: "Hey {{owner_first_name}},\n\nHonest question — when's the last time someone you didn't know personally called {{business_name}}?\n\nIf the answer is 'rare', you're leaking jobs to competitors who DO show up online.\n\nLet me build you a website that captures those calls. $499. 5 days. Done.\n\nInterested?\n\n— {{my_name}}" },
+      { subject: "Last email — {{business_name}}", body: "Hey,\n\nClosing the loop. If you change your mind about getting a website for {{business_name}}, my number/email stays the same.\n\nKeep doing great work in {{city}}.\n\n— {{my_name}}" }
+    ],
+    days: [0, 3, 7, 14]
+  },
+  "salon_growth": {
+    name: "Salon / Beauty — Growth",
+    niche: "Salon",
+    desc: "Growth-focused for salons, spas, barbers. 4 emails over 14 days.",
+    emails: [
+      { subject: "Booked solid every weekend at {{business_name}}?", body: "Hi {{owner_first_name}},\n\nI noticed {{business_name}} has {{rating}}-star reviews in {{city}} — your clients clearly love you.\n\nQuestion: are your Tuesday-Thursday slots booked solid too? Most salons I work with go from 60% to 90% full week-round after launching a website with online booking.\n\nI build beautiful, Instagram-style websites for {{niche}}s (mobile-friendly, online booking, gallery). $599 flat. Live in 7 days.\n\nWant a 10-min chat to see if this fits {{business_name}}?\n\n— {{my_name}}" },
+      { subject: "Following up — booking system for {{business_name}}", body: "Hey,\n\nFollow-up on my last email — I think a website + booking system could really help {{business_name}} fill those quiet weekday slots.\n\nWant me to send a 1-min video of what a salon website I built looks like?\n\nJust reply 'yes' and it's yours.\n\n— {{my_name}}" },
+      { subject: "Got 2 minutes? — {{business_name}}", body: "Hi {{owner_first_name}},\n\nI promise this won't take long. I sketched a quick design for {{business_name}}'s website — colors based on your brand, online booking, Instagram feed embedded.\n\nCan I send it over? Just say 'send' and it's done.\n\n— {{my_name}}" },
+      { subject: "Final note — {{business_name}}", body: "Hi,\n\nThis is the last note from me. If you ever want a website that books clients while you sleep, I'm a reply away.\n\nWishing {{business_name}} packed weeks in {{city}}. 💇\n\n— {{my_name}}" }
+    ],
+    days: [0, 3, 7, 14]
+  },
+  "generic_local": {
+    name: "Generic Local Business",
+    niche: "Any",
+    desc: "Works for any local business niche. Use when others don't fit. 4 emails over 14 days.",
+    emails: [
+      { subject: "Quick note about {{business_name}}", body: "Hi {{owner_first_name}},\n\nI came across {{business_name}} on Google — {{rating}} stars with {{reviews_count}} reviews! Clear sign you're doing great work in {{city}}.\n\nQuick observation: you don't have a website yet. Most {{niche}}s lose 40% of potential customers who Google them and find no site.\n\nI build simple, effective websites for local businesses (live in 7 days, $499 flat).\n\nInterested in seeing a quick mockup of what could work for {{business_name}}?\n\n— {{my_name}}" },
+      { subject: "Following up on {{business_name}}", body: "Hi,\n\nQuick follow-up — sent a note last week about building {{business_name}} a website.\n\nMost {{niche}}s I help get their first new customer through the site within 2 weeks.\n\nWorth a 10-min call?\n\n— {{my_name}}" },
+      { subject: "Free mockup for {{business_name}}?", body: "Hi {{owner_first_name}},\n\nLast week I sketched out a website idea for {{business_name}} — no charge, just a visual.\n\nWant me to send it? Reply 'yes' and it's on its way.\n\n— {{my_name}}" },
+      { subject: "Wrapping up — {{business_name}}", body: "Hi,\n\nThis is my final note. If you ever want to give {{business_name}} an online presence, drop me a line.\n\nUntil then, keep doing what you're doing in {{city}}. 🙌\n\n— {{my_name}}" }
+    ],
+    days: [0, 3, 7, 14]
+  }
+};
+
+// Suggest template based on lead's niche
+function suggestTemplate(niche) {
+  if (!niche) return "generic_local";
+  const n = niche.toLowerCase();
+  if (n.includes("restaurant") || n.includes("cafe") || n.includes("bakery") || n.includes("pizza") || n.includes("food") || n.includes("bar") || n.includes("pub")) return "restaurant_friendly";
+  if (n.includes("dentist") || n.includes("doctor") || n.includes("chiroprac") || n.includes("physio") || n.includes("optom") || n.includes("vet") || n.includes("pharm")) return "dentist_professional";
+  if (n.includes("plumber") || n.includes("electric") || n.includes("hvac") || n.includes("roofer") || n.includes("paint") || n.includes("carpent") || n.includes("handyman") || n.includes("lock") || n.includes("auto") || n.includes("mech")) return "service_local";
+  if (n.includes("salon") || n.includes("barber") || n.includes("nail") || n.includes("spa") || n.includes("massage") || n.includes("beauty") || n.includes("yoga") || n.includes("gym")) return "salon_growth";
+  return "generic_local";
+}
+
+// Personalize template by replacing tokens
+function personalize(text, lead) {
+  if (!text) return "";
+  // Extract first word of business name as guess for owner first name; fallback to "there"
+  const userEmail = (window.LF_USER && window.LF_USER.email) || "";
+  const userName = (window.LF_USER && window.LF_USER.user_metadata && window.LF_USER.user_metadata.full_name)
+    || (userEmail ? userEmail.split("@")[0] : "")
+    || "Your designer";
+  return text
+    .replace(/\{\{business_name\}\}/g, lead.name || "your business")
+    .replace(/\{\{niche\}\}/g, (lead.niche || "business").toLowerCase())
+    .replace(/\{\{city\}\}/g, lead.city || "your area")
+    .replace(/\{\{country\}\}/g, lead.countryName || "")
+    .replace(/\{\{rating\}\}/g, lead.rating ? lead.rating.toFixed(1) : "great")
+    .replace(/\{\{reviews_count\}\}/g, lead.reviews || "many")
+    .replace(/\{\{owner_first_name\}\}/g, "there")
+    .replace(/\{\{my_name\}\}/g, userName);
+}
+
+// Start a sequence: save to STATE.sequences and trigger step 0
+function startSequence() {
+  const leadId = document.getElementById("seqLeadPicker").value;
+  const templateId = document.getElementById("seqTemplatePicker").value;
+  if (!leadId) { toast("Pick a lead first", "danger"); return; }
+  if (!templateId) { toast("Pick a template", "danger"); return; }
+
+  if (!STATE.sequences) STATE.sequences = {};
+  if (STATE.sequences[leadId] && STATE.sequences[leadId].status === "active") {
+    toast("Sequence already running for this lead", "danger");
+    return;
+  }
+
+  const tmpl = OUTREACH_TEMPLATES[templateId];
+  STATE.sequences[leadId] = {
+    leadId, templateId,
+    startedAt: Date.now(),
+    currentStep: 0,
+    status: "active",
+    steps: tmpl.days.map((day) => ({ day, sentAt: null })),
+  };
+  save();
+  closeModal("newSeq");
+  renderOutreach();
+  switchTab("outreach");
+  toast("✓ Sequence started — Email 1 ready to send", "success");
+  // Open the send-email modal for step 0 immediately
+  setTimeout(() => openSendEmail(leadId, 0), 400);
+}
+
+// Render Outreach tab
+function renderOutreach() {
+  if (!STATE.sequences) STATE.sequences = {};
+  populateNewSeqModal();
+  renderTodayQueue();
+  renderActiveSequences();
+  renderTemplates();
+  document.getElementById("outreachCount").textContent =
+    Object.values(STATE.sequences).filter(s => s.status === "active").length;
+}
+
+function populateNewSeqModal() {
+  // Lead picker — only unlocked leads not already in active sequence
+  const leadSel = document.getElementById("seqLeadPicker");
+  leadSel.innerHTML = '<option value="">— Choose a lead —</option>';
+  Object.entries(STATE.unlocked).forEach(([id, U]) => {
+    if (STATE.sequences[id] && STATE.sequences[id].status === "active") return; // skip active
+    const L = U.leadSnapshot;
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = `${L.name} — ${L.niche} (${L.city || "?"})`;
+    leadSel.appendChild(opt);
+  });
+  // Template picker
+  const tmplSel = document.getElementById("seqTemplatePicker");
+  tmplSel.innerHTML = '<option value="">— Choose a template —</option>';
+  Object.entries(OUTREACH_TEMPLATES).forEach(([id, t]) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = `${t.name}`;
+    tmplSel.appendChild(opt);
+  });
+}
+
+// Auto-suggest template when lead picked + show preview
+function updateSeqPreview() {
+  const leadId = document.getElementById("seqLeadPicker").value;
+  const tmplSel = document.getElementById("seqTemplatePicker");
+  const preview = document.getElementById("seqPreview");
+  if (!leadId) { preview.textContent = "Pick a lead and template above to see preview."; return; }
+  const L = STATE.unlocked[leadId]?.leadSnapshot;
+  if (!L) return;
+  // Auto-suggest if no template chosen
+  if (!tmplSel.value) {
+    tmplSel.value = suggestTemplate(L.niche);
+  }
+  const tmpl = OUTREACH_TEMPLATES[tmplSel.value];
+  if (!tmpl) { preview.textContent = "Pick a template to preview."; return; }
+  const e = tmpl.emails[0];
+  preview.innerHTML = `<div class="subj-line">Subject: ${escapeHtml(personalize(e.subject, L))}</div>${escapeHtml(personalize(e.body, L))}`;
+}
+
+// Today's queue: emails due today or overdue
+function renderTodayQueue() {
+  const wrap = document.getElementById("todayQueueList");
+  const now = Date.now();
+  const items = [];
+  Object.values(STATE.sequences || {}).forEach(seq => {
+    if (seq.status !== "active") return;
+    const tmpl = OUTREACH_TEMPLATES[seq.templateId];
+    if (!tmpl) return;
+    seq.steps.forEach((step, idx) => {
+      if (step.sentAt) return; // already sent
+      const dueAt = seq.startedAt + step.day * 24 * 60 * 60 * 1000;
+      if (dueAt <= now + 12 * 60 * 60 * 1000) { // due within 12h or overdue
+        items.push({ seq, stepIdx: idx, step, dueAt, isOverdue: dueAt < now - 24 * 60 * 60 * 1000 });
+      }
+    });
+  });
+  // sort overdue first, then by due date
+  items.sort((a, b) => a.dueAt - b.dueAt);
+
+  document.getElementById("todayQueueCount").textContent =
+    items.length === 0 ? "All caught up — no emails due" : `${items.length} email${items.length > 1 ? "s" : ""} ready to send`;
+
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="queue-empty">📭 No emails to send right now. Start a new sequence to get going.</div>`;
+    return;
+  }
+  wrap.innerHTML = items.map(it => {
+    const L = STATE.unlocked[it.seq.leadId]?.leadSnapshot;
+    if (!L) return "";
+    const overdueDays = it.isOverdue ? Math.ceil((Date.now() - it.dueAt) / 86400000) : 0;
+    return `<div class="queue-item ${it.isOverdue ? "overdue" : ""}">
+      <div class="queue-day-badge ${it.isOverdue ? "overdue" : ""}">
+        <div class="step">${it.stepIdx + 1}/4</div>
+        <div class="label">Email</div>
+      </div>
+      <div class="queue-meta">
+        <div class="queue-lead-name">${escapeHtml(L.name)}</div>
+        <div class="queue-context"><span class="niche">${escapeHtml(L.niche)}</span> · ${escapeHtml(L.city || "")} · ${it.isOverdue ? `Overdue ${overdueDays}d` : "Due today"}</div>
+      </div>
+      <div class="queue-actions">
+        <button class="seq-mini-btn success" onclick="openSendEmail('${it.seq.leadId}', ${it.stepIdx})">📧 Send</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// All active sequences
+function renderActiveSequences() {
+  const wrap = document.getElementById("activeSeqList");
+  const seqs = Object.values(STATE.sequences || {});
+  if (seqs.length === 0) {
+    wrap.innerHTML = `<div class="queue-empty">No sequences yet. Click "Start New Sequence" above to send your first cold email.</div>`;
+    return;
+  }
+  // Sort: active first, then by start date desc
+  seqs.sort((a, b) => {
+    if (a.status !== b.status) return a.status === "active" ? -1 : 1;
+    return b.startedAt - a.startedAt;
+  });
+  wrap.innerHTML = seqs.map(seq => {
+    const L = STATE.unlocked[seq.leadId]?.leadSnapshot;
+    if (!L) return "";
+    const tmpl = OUTREACH_TEMPLATES[seq.templateId];
+    const stepsHtml = seq.steps.map((step, idx) => {
+      const dueAt = seq.startedAt + step.day * 24 * 60 * 60 * 1000;
+      let cls = "upcoming";
+      if (step.sentAt) cls = "sent";
+      else if (dueAt <= Date.now()) cls = "due";
+      const label = step.sentAt ? `✓ Sent` : (cls === "due" ? `Send now` : `Day ${step.day}`);
+      return `<div class="seq-step ${cls}" ${cls === "due" ? `onclick="openSendEmail('${seq.leadId}', ${idx})"` : ""}>${label}</div>`;
+    }).join("");
+    return `<div class="seq-card">
+      <div class="seq-card-head">
+        <div>
+          <div class="seq-card-lead">${escapeHtml(L.name)}</div>
+          <div class="seq-card-sub">${escapeHtml(tmpl ? tmpl.name : seq.templateId)} · started ${timeAgo(seq.startedAt)}</div>
+        </div>
+        <span class="seq-status-pill seq-status-${seq.status}">${seq.status}</span>
+      </div>
+      <div class="seq-progress">${stepsHtml}</div>
+      <div class="seq-card-actions">
+        ${seq.status === "active" ? `<button class="seq-mini-btn success" onclick="markReplied('${seq.leadId}')">💬 Got a reply</button>` : ""}
+        ${seq.status === "active" ? `<button class="seq-mini-btn" onclick="pauseSeq('${seq.leadId}')">⏸ Pause</button>` : ""}
+        ${seq.status === "paused" ? `<button class="seq-mini-btn success" onclick="resumeSeq('${seq.leadId}')">▶ Resume</button>` : ""}
+        <button class="seq-mini-btn danger" onclick="deleteSeq('${seq.leadId}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderTemplates() {
+  const wrap = document.getElementById("templateList");
+  wrap.innerHTML = Object.entries(OUTREACH_TEMPLATES).map(([id, t]) => `
+    <div class="template-card">
+      <div class="template-name">${escapeHtml(t.name)}</div>
+      <span class="template-tag">${escapeHtml(t.niche)}</span>
+      <div class="template-desc">${escapeHtml(t.desc)}</div>
+    </div>
+  `).join("");
+}
+
+let SEND_CTX = null; // { leadId, stepIdx }
+
+function openSendEmail(leadId, stepIdx) {
+  const seq = STATE.sequences[leadId];
+  const L = STATE.unlocked[leadId]?.leadSnapshot;
+  if (!seq || !L) return;
+  const tmpl = OUTREACH_TEMPLATES[seq.templateId];
+  if (!tmpl) return;
+  const e = tmpl.emails[stepIdx];
+  if (!e) return;
+  SEND_CTX = { leadId, stepIdx };
+  document.getElementById("sendEmailTitle").textContent = `Email ${stepIdx + 1} of 4 — ${L.name}`;
+  document.getElementById("sendEmailSub").textContent = `${tmpl.name} · Day ${tmpl.days[stepIdx]}`;
+  document.getElementById("sendEmailTo").value = L.email || "(no email on lead — use phone/WhatsApp)";
+  document.getElementById("sendEmailSubject").value = personalize(e.subject, L);
+  document.getElementById("sendEmailBody").value = personalize(e.body, L);
+  openModal("sendEmail");
+}
+
+function sendViaGmail() {
+  if (!SEND_CTX) return;
+  const L = STATE.unlocked[SEND_CTX.leadId]?.leadSnapshot;
+  const to = L && L.email ? L.email : "";
+  const subject = document.getElementById("sendEmailSubject").value;
+  const body = document.getElementById("sendEmailBody").value;
+  const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = url;
+  // After opening mail client, suggest marking as sent
+  setTimeout(() => {
+    if (confirm("Email opened in your mail app. Mark as Sent?")) {
+      markAsSent();
+    }
+  }, 800);
+}
+
+function copySendEmail() {
+  const subject = document.getElementById("sendEmailSubject").value;
+  const body = document.getElementById("sendEmailBody").value;
+  const text = `Subject: ${subject}\n\n${body}`;
+  navigator.clipboard.writeText(text).then(() => toast("✓ Copied to clipboard", "success"));
+}
+
+function markAsSent() {
+  if (!SEND_CTX) return;
+  const seq = STATE.sequences[SEND_CTX.leadId];
+  if (!seq) return;
+  seq.steps[SEND_CTX.stepIdx].sentAt = new Date().toISOString();
+  seq.currentStep = Math.max(seq.currentStep, SEND_CTX.stepIdx + 1);
+  // If all sent, mark completed
+  if (seq.steps.every(s => s.sentAt)) seq.status = "completed";
+  save();
+  closeModal("sendEmail");
+  renderOutreach();
+  toast(`✓ Email ${SEND_CTX.stepIdx + 1} marked as sent`, "success");
+}
+
+function markReplied(leadId) {
+  if (!confirm("Mark this sequence as 'replied'? It will pause and stop future emails.")) return;
+  STATE.sequences[leadId].status = "replied";
+  save();
+  renderOutreach();
+  toast("✓ Marked as replied. Sequence stopped.", "success");
+}
+
+function pauseSeq(leadId) {
+  STATE.sequences[leadId].status = "paused";
+  save();
+  renderOutreach();
+  toast("Sequence paused", "success");
+}
+
+function resumeSeq(leadId) {
+  STATE.sequences[leadId].status = "active";
+  save();
+  renderOutreach();
+  toast("Sequence resumed", "success");
+}
+
+function deleteSeq(leadId) {
+  if (!confirm("Delete this sequence permanently?")) return;
+  delete STATE.sequences[leadId];
+  save();
+  renderOutreach();
+  toast("Sequence deleted", "success");
+}
+
 function exportCSV() {
   const ids = Object.keys(STATE.unlocked);
   if (!ids.length) { toast("No leads to export", "danger"); return; }
@@ -1456,6 +1998,7 @@ function switchTab(tabName, save = true) {
   tabBtn.classList.add("active");
   tabContent.classList.add("active");
   if (tabName === "my-leads") renderMyLeads();
+  if (tabName === "outreach") renderOutreach();
   if (tabName === "history") renderHistory();
   if (save) localStorage.setItem("lf_activeTab", tabName);
 }
@@ -1513,6 +2056,7 @@ function resetFilters() {
 
   document.getElementById("creditDisplay").textContent = STATE.credits;
   document.getElementById("myLeadsCount").textContent = Object.keys(STATE.unlocked).length;
+  document.getElementById("outreachCount").textContent = Object.values(STATE.sequences || {}).filter(s => s.status === "active").length;
   document.getElementById("statUnlocked").textContent = Object.keys(STATE.unlocked).length;
 
   renderSavedQueries();
